@@ -1,9 +1,9 @@
 import hashlib
 import os
-import sqlite3
-from pathlib import Path
 
-DB_PATH = Path(__file__).parent / "cambio_de_manos.db"
+import psycopg2
+import psycopg2.extras
+import streamlit as st
 
 RUBROS = [
     "Gastronomía", "Comercio minorista", "Indumentaria", "Servicios",
@@ -20,59 +20,71 @@ PROVINCIAS = [
 ]
 
 
+def _database_url() -> str:
+    try:
+        if "DATABASE_URL" in st.secrets:
+            return st.secrets["DATABASE_URL"]
+    except Exception:
+        pass
+    url = os.environ.get("DATABASE_URL")
+    if not url:
+        raise RuntimeError(
+            "Falta configurar DATABASE_URL (cadena de conexión a Postgres). "
+            "Definila como variable de entorno o en .streamlit/secrets.toml."
+        )
+    return url
+
+
 def get_connection():
-    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON")
+    conn = psycopg2.connect(_database_url(), cursor_factory=psycopg2.extras.RealDictCursor)
     return conn
 
 
 def init_db():
     conn = get_connection()
-    conn.executescript(
+    cur = conn.cursor()
+    cur.execute(
         """
         CREATE TABLE IF NOT EXISTS usuarios (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             nombre TEXT NOT NULL,
             email TEXT NOT NULL UNIQUE,
             telefono TEXT,
             password_hash TEXT NOT NULL,
             password_salt TEXT NOT NULL,
-            fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP
+            fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
         CREATE TABLE IF NOT EXISTS publicaciones (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            usuario_id INTEGER NOT NULL,
+            id SERIAL PRIMARY KEY,
+            usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
             titulo TEXT NOT NULL,
             rubro TEXT NOT NULL,
             provincia TEXT NOT NULL,
             localidad TEXT,
             descripcion TEXT,
-            precio_venta REAL,
-            facturacion_mensual REAL,
-            resultado_mensual REAL,
+            precio_venta DOUBLE PRECISION,
+            facturacion_mensual DOUBLE PRECISION,
+            resultado_mensual DOUBLE PRECISION,
             antiguedad_anios INTEGER,
             empleados INTEGER,
             incluye_inmueble INTEGER DEFAULT 0,
             motivo_venta TEXT,
             estado TEXT DEFAULT 'activa',
-            fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+            fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
         CREATE TABLE IF NOT EXISTS consultas (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            publicacion_id INTEGER NOT NULL,
-            usuario_id INTEGER NOT NULL,
+            id SERIAL PRIMARY KEY,
+            publicacion_id INTEGER NOT NULL REFERENCES publicaciones(id),
+            usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
             mensaje TEXT,
-            fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (publicacion_id) REFERENCES publicaciones(id),
-            FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+            fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         """
     )
     conn.commit()
+    cur.close()
     conn.close()
 
 
@@ -86,28 +98,36 @@ def crear_usuario(nombre: str, email: str, password: str, telefono: str = None) 
     hashed, salt = _hash_password(password)
     conn = get_connection()
     try:
-        cur = conn.execute(
-            "INSERT INTO usuarios (nombre, email, telefono, password_hash, password_salt) VALUES (?, ?, ?, ?, ?)",
+        cur = conn.cursor()
+        cur.execute(
+            "INSERT INTO usuarios (nombre, email, telefono, password_hash, password_salt) "
+            "VALUES (%s, %s, %s, %s, %s) RETURNING id",
             (nombre, email.lower().strip(), telefono, hashed, salt),
         )
+        new_id = cur.fetchone()["id"]
         conn.commit()
-        return cur.lastrowid
+        cur.close()
+        return new_id
     finally:
         conn.close()
 
 
 def obtener_usuario_por_email(email: str):
     conn = get_connection()
-    row = conn.execute(
-        "SELECT * FROM usuarios WHERE email = ?", (email.lower().strip(),)
-    ).fetchone()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM usuarios WHERE email = %s", (email.lower().strip(),))
+    row = cur.fetchone()
+    cur.close()
     conn.close()
     return row
 
 
 def obtener_usuario(usuario_id: int):
     conn = get_connection()
-    row = conn.execute("SELECT * FROM usuarios WHERE id = ?", (usuario_id,)).fetchone()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM usuarios WHERE id = %s", (usuario_id,))
+    row = cur.fetchone()
+    cur.close()
     conn.close()
     return row
 
@@ -119,28 +139,33 @@ def verificar_password(usuario, password: str) -> bool:
 
 def crear_publicacion(data: dict, estado: str = "activa") -> int:
     conn = get_connection()
-    cur = conn.execute(
+    cur = conn.cursor()
+    cur.execute(
         """
         INSERT INTO publicaciones (
             usuario_id, titulo, rubro, provincia, localidad, descripcion,
             precio_venta, facturacion_mensual, resultado_mensual,
             antiguedad_anios, empleados, incluye_inmueble, motivo_venta, estado
-        ) VALUES (:usuario_id, :titulo, :rubro, :provincia, :localidad, :descripcion,
-            :precio_venta, :facturacion_mensual, :resultado_mensual,
-            :antiguedad_anios, :empleados, :incluye_inmueble, :motivo_venta, :estado)
+        ) VALUES (%(usuario_id)s, %(titulo)s, %(rubro)s, %(provincia)s, %(localidad)s, %(descripcion)s,
+            %(precio_venta)s, %(facturacion_mensual)s, %(resultado_mensual)s,
+            %(antiguedad_anios)s, %(empleados)s, %(incluye_inmueble)s, %(motivo_venta)s, %(estado)s)
+        RETURNING id
         """,
         {**data, "estado": estado},
     )
+    new_id = cur.fetchone()["id"]
     conn.commit()
-    new_id = cur.lastrowid
+    cur.close()
     conn.close()
     return new_id
 
 
 def activar_publicacion(pub_id: int):
     conn = get_connection()
-    conn.execute("UPDATE publicaciones SET estado = 'activa' WHERE id = ?", (pub_id,))
+    cur = conn.cursor()
+    cur.execute("UPDATE publicaciones SET estado = 'activa' WHERE id = %s", (pub_id,))
     conn.commit()
+    cur.close()
     conn.close()
 
 
@@ -154,73 +179,85 @@ _SELECT_PUB_CON_CONTACTO = """
 
 def listar_publicaciones(rubro=None, provincia=None, precio_max=None, texto=None):
     conn = get_connection()
+    cur = conn.cursor()
     query = _SELECT_PUB_CON_CONTACTO + " WHERE p.estado = 'activa'"
     params = []
 
     if rubro and rubro != "Todos":
-        query += " AND p.rubro = ?"
+        query += " AND p.rubro = %s"
         params.append(rubro)
     if provincia and provincia != "Todas":
-        query += " AND p.provincia = ?"
+        query += " AND p.provincia = %s"
         params.append(provincia)
     if precio_max:
-        query += " AND (p.precio_venta IS NULL OR p.precio_venta <= ?)"
+        query += " AND (p.precio_venta IS NULL OR p.precio_venta <= %s)"
         params.append(precio_max)
     if texto:
-        query += " AND (p.titulo LIKE ? OR p.descripcion LIKE ?)"
+        query += " AND (p.titulo ILIKE %s OR p.descripcion ILIKE %s)"
         like = f"%{texto}%"
         params.extend([like, like])
 
     query += " ORDER BY p.fecha_creacion DESC"
-    rows = conn.execute(query, params).fetchall()
+    cur.execute(query, params)
+    rows = cur.fetchall()
+    cur.close()
     conn.close()
     return rows
 
 
 def obtener_publicacion(pub_id: int):
     conn = get_connection()
-    row = conn.execute(
-        _SELECT_PUB_CON_CONTACTO + " WHERE p.id = ?", (pub_id,)
-    ).fetchone()
+    cur = conn.cursor()
+    cur.execute(_SELECT_PUB_CON_CONTACTO + " WHERE p.id = %s", (pub_id,))
+    row = cur.fetchone()
+    cur.close()
     conn.close()
     return row
 
 
 def listar_publicaciones_de_usuario(usuario_id: int):
     conn = get_connection()
-    rows = conn.execute(
-        _SELECT_PUB_CON_CONTACTO + " WHERE p.usuario_id = ? ORDER BY p.fecha_creacion DESC",
+    cur = conn.cursor()
+    cur.execute(
+        _SELECT_PUB_CON_CONTACTO + " WHERE p.usuario_id = %s ORDER BY p.fecha_creacion DESC",
         (usuario_id,),
-    ).fetchall()
+    )
+    rows = cur.fetchall()
+    cur.close()
     conn.close()
     return rows
 
 
 def crear_consulta(data: dict):
     conn = get_connection()
-    conn.execute(
+    cur = conn.cursor()
+    cur.execute(
         """
         INSERT INTO consultas (publicacion_id, usuario_id, mensaje)
-        VALUES (:publicacion_id, :usuario_id, :mensaje)
+        VALUES (%(publicacion_id)s, %(usuario_id)s, %(mensaje)s)
         """,
         data,
     )
     conn.commit()
+    cur.close()
     conn.close()
 
 
 def listar_consultas(pub_id: int):
     conn = get_connection()
-    rows = conn.execute(
+    cur = conn.cursor()
+    cur.execute(
         """
         SELECT c.*, u.nombre AS nombre_interesado, u.email AS email_interesado,
                u.telefono AS telefono_interesado
         FROM consultas c
         JOIN usuarios u ON u.id = c.usuario_id
-        WHERE c.publicacion_id = ?
+        WHERE c.publicacion_id = %s
         ORDER BY c.fecha_creacion DESC
         """,
         (pub_id,),
-    ).fetchall()
+    )
+    rows = cur.fetchall()
+    cur.close()
     conn.close()
     return rows
