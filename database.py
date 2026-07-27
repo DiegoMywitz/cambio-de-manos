@@ -81,6 +81,14 @@ def init_db():
             mensaje TEXT,
             fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+
+        CREATE TABLE IF NOT EXISTS imagenes_publicacion (
+            id SERIAL PRIMARY KEY,
+            publicacion_id INTEGER NOT NULL REFERENCES publicaciones(id),
+            url TEXT NOT NULL,
+            orden INTEGER DEFAULT 0,
+            fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
         """
     )
     conn.commit()
@@ -261,3 +269,49 @@ def listar_consultas(pub_id: int):
     cur.close()
     conn.close()
     return rows
+
+
+def agregar_imagen(pub_id: int, url: str, orden: int = 0):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO imagenes_publicacion (publicacion_id, url, orden) VALUES (%s, %s, %s)",
+        (pub_id, url, orden),
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
+def listar_imagenes(pub_id: int):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT * FROM imagenes_publicacion WHERE publicacion_id = %s ORDER BY orden, id",
+        (pub_id,),
+    )
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows
+
+
+def imagenes_portada(pub_ids: list):
+    """Devuelve un dict {publicacion_id: primera_url} para una lista de ids, en una sola consulta."""
+    if not pub_ids:
+        return {}
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT DISTINCT ON (publicacion_id) publicacion_id, url
+        FROM imagenes_publicacion
+        WHERE publicacion_id = ANY(%s)
+        ORDER BY publicacion_id, orden, id
+        """,
+        (pub_ids,),
+    )
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return {r["publicacion_id"]: r["url"] for r in rows}

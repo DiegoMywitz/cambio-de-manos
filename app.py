@@ -5,11 +5,13 @@ from database import (
     RUBROS, PROVINCIAS, init_db, crear_publicacion, listar_publicaciones,
     obtener_publicacion, crear_consulta, listar_consultas,
     listar_publicaciones_de_usuario, activar_publicacion,
+    agregar_imagen, listar_imagenes, imagenes_portada,
 )
 import style
 import auth
 import notifications
 import payments
+import images
 
 st.set_page_config(page_title="Cambio de Manos", page_icon="⚖", layout="wide")
 style.inject()
@@ -68,6 +70,8 @@ else:
 
 if not notifications.esta_configurado():
     st.sidebar.caption("Notificaciones por email: no configuradas.")
+if not images.esta_configurado():
+    st.sidebar.caption("Fotos de publicaciones: no configuradas.")
 
 # ---------- Vista: publicar ----------
 if st.session_state.vista == "publicar":
@@ -96,6 +100,11 @@ if st.session_state.vista == "publicar":
 
         descripcion = st.text_area("Descripción del negocio *",
                                     placeholder="Contá qué vende, por qué es una buena oportunidad, estado del local, equipamiento incluido, etc.")
+
+        fotos = None
+        if images.esta_configurado():
+            fotos = st.file_uploader("Fotos del negocio (opcional, hasta 5)", type=["jpg", "jpeg", "png"],
+                                      accept_multiple_files=True)
 
         if payments.esta_configurado():
             st.caption(f"Costo de publicación: ${payments.PRECIO_PUBLICACION:,.0f} ARS "
@@ -128,6 +137,11 @@ if st.session_state.vista == "publicar":
                     "incluye_inmueble": int(incluye_inmueble),
                     "motivo_venta": motivo_venta,
                 }, estado=estado_inicial)
+
+                if fotos:
+                    for i, foto in enumerate(fotos[:5]):
+                        url = images.subir_imagen(pub_id, foto.getvalue(), foto.name)
+                        agregar_imagen(pub_id, url, orden=i)
 
                 if estado_inicial == "pendiente_pago":
                     st.session_state.pub_pendiente_pago = pub_id
@@ -165,6 +179,12 @@ elif st.session_state.vista == "detalle" and st.session_state.pub_seleccionada:
         style.kicker(pub["rubro"])
         st.title(pub["titulo"])
         st.caption(f"{pub['rubro']} · {pub['localidad'] or ''} {pub['provincia']}")
+
+        imagenes = listar_imagenes(pub["id"])
+        if imagenes:
+            cols_img = st.columns(len(imagenes))
+            for col_img, img in zip(cols_img, imagenes):
+                col_img.image(img["url"], use_container_width=True)
 
         col1, col2, col3, col4 = st.columns(4)
         col1.metric("Precio de venta", money(pub["precio_venta"]))
@@ -297,9 +317,15 @@ else:
         st.info("Todavía no hay negocios publicados con esos filtros. ¡Sé el primero en publicar uno!")
     else:
         st.caption(f"{len(publicaciones)} negocio(s) encontrado(s)")
+        portadas = imagenes_portada([pub["id"] for pub in publicaciones])
         for pub in publicaciones:
             with st.container(border=True):
-                c1, c2 = st.columns([3, 1])
+                portada = portadas.get(pub["id"])
+                if portada:
+                    c0, c1, c2 = st.columns([1, 3, 1])
+                    c0.image(portada, use_container_width=True)
+                else:
+                    c1, c2 = st.columns([3, 1])
                 with c1:
                     st.markdown(f"### {pub['titulo']}")
                     st.caption(f"{pub['rubro']} · {pub['localidad'] or ''} {pub['provincia']}")
