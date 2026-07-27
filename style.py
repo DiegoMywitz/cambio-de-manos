@@ -9,6 +9,7 @@ SLATE_LIGHT = "#8b96a5"
 BORDER = "#dde2e8"
 BG = "#f7f8fa"
 GOLD = "#a9803e"
+ICON_BLUE = "#5b84b1"
 
 ASSETS_DIR = Path(__file__).parent / "assets"
 
@@ -120,30 +121,33 @@ def inject():
             margin-bottom: -0.5rem;
         }}
 
-        .cdm-logo {{
+        .cdm-logo-panel {{
             display: flex;
             align-items: center;
             gap: 0.85rem;
-            padding: 0.25rem 0 1rem 0;
+            background-color: {BG};
+            border-radius: 4px;
+            padding: 0.9rem 1rem;
+            margin-bottom: 1rem;
         }}
-        .cdm-logo img {{
-            width: 46px;
-            height: 46px;
+        .cdm-logo-panel img {{
+            width: 44px;
+            height: 44px;
             flex-shrink: 0;
         }}
         .cdm-logo-word {{
             font-family: 'Helvetica Neue', Arial, sans-serif;
             font-weight: 700;
-            font-size: 1.2rem;
+            font-size: 1.05rem;
             line-height: 1.05;
             letter-spacing: 0.3px;
-            color: #ffffff !important;
+            color: {NAVY_DARK} !important;
         }}
         .cdm-logo-tagline {{
             font-family: 'Helvetica Neue', Arial, sans-serif;
-            font-size: 0.62rem;
-            letter-spacing: 1.5px;
-            color: {GOLD} !important;
+            font-size: 0.56rem;
+            letter-spacing: 1.3px;
+            color: {ICON_BLUE} !important;
             margin-top: 0.15rem;
         }}
         </style>
@@ -171,7 +175,7 @@ def _logo_base64() -> str:
 def sidebar_logo():
     st.sidebar.markdown(
         f"""
-        <div class="cdm-logo">
+        <div class="cdm-logo-panel">
             <img src="data:image/svg+xml;base64,{_logo_base64()}" alt="Cambio de Manos">
             <div>
                 <div class="cdm-logo-word">CAMBIO<br>DE MANOS</div>
