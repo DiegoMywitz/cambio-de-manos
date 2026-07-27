@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import streamlit as st
 
 NAVY = "#0f2647"
@@ -7,6 +9,8 @@ SLATE_LIGHT = "#8b96a5"
 BORDER = "#dde2e8"
 BG = "#f7f8fa"
 GOLD = "#a9803e"
+
+ASSETS_DIR = Path(__file__).parent / "assets"
 
 
 def inject():
@@ -95,6 +99,11 @@ def inject():
         [data-testid="stVerticalBlockBorderWrapper"] {{
             border-color: {BORDER} !important;
             border-radius: 3px !important;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }}
+        [data-testid="stVerticalBlockBorderWrapper"]:has(button):hover {{
+            border-color: {SLATE_LIGHT} !important;
+            box-shadow: 0 2px 10px rgba(15, 38, 71, 0.08);
         }}
 
         hr {{
@@ -110,6 +119,33 @@ def inject():
             font-weight: 600;
             margin-bottom: -0.5rem;
         }}
+
+        .cdm-logo {{
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            padding: 0.25rem 0 1rem 0;
+        }}
+        .cdm-logo img {{
+            width: 46px;
+            height: 46px;
+            flex-shrink: 0;
+        }}
+        .cdm-logo-word {{
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-weight: 700;
+            font-size: 1.2rem;
+            line-height: 1.05;
+            letter-spacing: 0.3px;
+            color: #ffffff !important;
+        }}
+        .cdm-logo-tagline {{
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 0.62rem;
+            letter-spacing: 1.5px;
+            color: {GOLD} !important;
+            margin-top: 0.15rem;
+        }}
         </style>
         """,
         unsafe_allow_html=True,
@@ -118,3 +154,30 @@ def inject():
 
 def kicker(text: str):
     st.markdown(f'<div class="cdm-kicker">{text}</div>', unsafe_allow_html=True)
+
+
+_LOGO_B64 = None
+
+
+def _logo_base64() -> str:
+    global _LOGO_B64
+    if _LOGO_B64 is None:
+        import base64
+        svg_bytes = (ASSETS_DIR / "logo.svg").read_bytes()
+        _LOGO_B64 = base64.b64encode(svg_bytes).decode("ascii")
+    return _LOGO_B64
+
+
+def sidebar_logo():
+    st.sidebar.markdown(
+        f"""
+        <div class="cdm-logo">
+            <img src="data:image/svg+xml;base64,{_logo_base64()}" alt="Cambio de Manos">
+            <div>
+                <div class="cdm-logo-word">CAMBIO<br>DE MANOS</div>
+                <div class="cdm-logo-tagline">COMPRAVENTA DE EMPRESAS</div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )

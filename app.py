@@ -13,7 +13,8 @@ import notifications
 import payments
 import images
 
-st.set_page_config(page_title="Cambio de Manos", page_icon="⚖", layout="wide")
+st.set_page_config(page_title="Cambio de Manos",
+                    page_icon=str(style.ASSETS_DIR / "favicon.png"), layout="wide")
 style.inject()
 init_db()
 
@@ -39,7 +40,7 @@ def ir_a(vista, pub_id=None):
 
 
 # ---------- Sidebar / navegación ----------
-st.sidebar.title("Cambio de Manos")
+style.sidebar_logo()
 st.sidebar.caption("Transferencia de fondos de comercio y empresas en Argentina.")
 st.sidebar.button("Buscar oportunidades", use_container_width=True,
                    on_click=ir_a, args=("buscar",))
