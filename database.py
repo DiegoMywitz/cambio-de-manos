@@ -71,8 +71,11 @@ def init_db():
             incluye_inmueble INTEGER DEFAULT 0,
             motivo_venta TEXT,
             estado TEXT DEFAULT 'activa',
+            tier TEXT DEFAULT 'basico',
             fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+
+        ALTER TABLE publicaciones ADD COLUMN IF NOT EXISTS tier TEXT DEFAULT 'basico';
 
         CREATE TABLE IF NOT EXISTS consultas (
             id SERIAL PRIMARY KEY,
@@ -145,7 +148,7 @@ def verificar_password(usuario, password: str) -> bool:
     return hashed == usuario["password_hash"]
 
 
-def crear_publicacion(data: dict, estado: str = "activa") -> int:
+def crear_publicacion(data: dict, estado: str = "activa", tier: str = "basico") -> int:
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
@@ -153,13 +156,13 @@ def crear_publicacion(data: dict, estado: str = "activa") -> int:
         INSERT INTO publicaciones (
             usuario_id, titulo, rubro, provincia, localidad, descripcion,
             precio_venta, facturacion_mensual, resultado_mensual,
-            antiguedad_anios, empleados, incluye_inmueble, motivo_venta, estado
+            antiguedad_anios, empleados, incluye_inmueble, motivo_venta, estado, tier
         ) VALUES (%(usuario_id)s, %(titulo)s, %(rubro)s, %(provincia)s, %(localidad)s, %(descripcion)s,
             %(precio_venta)s, %(facturacion_mensual)s, %(resultado_mensual)s,
-            %(antiguedad_anios)s, %(empleados)s, %(incluye_inmueble)s, %(motivo_venta)s, %(estado)s)
+            %(antiguedad_anios)s, %(empleados)s, %(incluye_inmueble)s, %(motivo_venta)s, %(estado)s, %(tier)s)
         RETURNING id
         """,
-        {**data, "estado": estado},
+        {**data, "estado": estado, "tier": tier},
     )
     new_id = cur.fetchone()["id"]
     conn.commit()
@@ -205,7 +208,7 @@ def listar_publicaciones(rubro=None, provincia=None, precio_max=None, texto=None
         like = f"%{texto}%"
         params.extend([like, like])
 
-    query += " ORDER BY p.fecha_creacion DESC"
+    query += " ORDER BY (p.tier = 'destacado') DESC, p.fecha_creacion DESC"
     cur.execute(query, params)
     rows = cur.fetchall()
     cur.close()

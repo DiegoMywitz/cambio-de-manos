@@ -15,7 +15,10 @@ def _config(key: str, default=None):
 
 ACCESS_TOKEN = _config("CDM_MP_ACCESS_TOKEN")
 PRECIO_PUBLICACION = float(_config("CDM_PRECIO_PUBLICACION", "9999"))
+PRECIO_DESTACADO = float(_config("CDM_PRECIO_DESTACADO", "19999"))
 APP_BASE_URL = _config("CDM_APP_BASE_URL", "http://localhost:8600")
+
+PRECIOS_POR_TIER = {"basico": PRECIO_PUBLICACION, "destacado": PRECIO_DESTACADO}
 
 
 def esta_configurado() -> bool:
@@ -26,15 +29,16 @@ def _sdk():
     return mercadopago.SDK(ACCESS_TOKEN)
 
 
-def crear_preferencia_publicacion(pub_id: int, titulo: str) -> str:
+def crear_preferencia_publicacion(pub_id: int, titulo: str, tier: str = "basico") -> str:
     """Crea una preferencia de pago para publicar un negocio y devuelve la URL de checkout."""
     sdk = _sdk()
+    etiqueta_tier = "Destacado" if tier == "destacado" else "Básico"
     preference_data = {
         "items": [
             {
-                "title": f"Publicación en Cambio de Manos: {titulo}"[:250],
+                "title": f"Publicación {etiqueta_tier} en Cambio de Manos: {titulo}"[:250],
                 "quantity": 1,
-                "unit_price": PRECIO_PUBLICACION,
+                "unit_price": PRECIOS_POR_TIER.get(tier, PRECIO_PUBLICACION),
                 "currency_id": "ARS",
             }
         ],

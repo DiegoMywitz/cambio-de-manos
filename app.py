@@ -107,9 +107,17 @@ if st.session_state.vista == "publicar":
             fotos = st.file_uploader("Fotos del negocio (opcional, hasta 5)", type=["jpg", "jpeg", "png"],
                                       accept_multiple_files=True)
 
+        tier = "basico"
         if payments.esta_configurado():
-            st.caption(f"Costo de publicación: ${payments.PRECIO_PUBLICACION:,.0f} ARS "
-                       "(se activa una vez confirmado el pago).".replace(",", "."))
+            tier_label = st.radio(
+                "Nivel de publicación",
+                [
+                    f"Básico — ${payments.PRECIO_PUBLICACION:,.0f} ARS".replace(",", "."),
+                    f"Destacado — ${payments.PRECIO_DESTACADO:,.0f} ARS (aparece primero en la búsqueda)".replace(",", "."),
+                ],
+            )
+            tier = "destacado" if tier_label.startswith("Destacado") else "basico"
+            st.caption("La publicación se activa una vez confirmado el pago.")
 
         enviado = st.form_submit_button("Publicar negocio", type="primary", use_container_width=True)
 
@@ -137,7 +145,7 @@ if st.session_state.vista == "publicar":
                     "empleados": empleados or None,
                     "incluye_inmueble": int(incluye_inmueble),
                     "motivo_venta": motivo_venta,
-                }, estado=estado_inicial)
+                }, estado=estado_inicial, tier=tier)
 
                 if fotos:
                     for i, foto in enumerate(fotos[:5]):
@@ -156,7 +164,7 @@ if st.session_state.vista == "publicar":
             st.divider()
             st.subheader("Falta confirmar el pago")
             st.caption("Tu publicación quedó guardada, pero no es visible en la búsqueda hasta que se acredite el pago.")
-            checkout_url = payments.crear_preferencia_publicacion(pub_p["id"], pub_p["titulo"])
+            checkout_url = payments.crear_preferencia_publicacion(pub_p["id"], pub_p["titulo"], pub_p["tier"])
             col_pago1, col_pago2 = st.columns(2)
             with col_pago1:
                 st.link_button("Pagar publicación", checkout_url, type="primary", use_container_width=True)
@@ -261,6 +269,8 @@ elif st.session_state.vista == "mis_publicaciones":
     else:
         for pub in propias:
             with st.container(border=True):
+                if pub.get("tier") == "destacado":
+                    style.kicker("★ Destacado")
                 c1, c2, c3 = st.columns([3, 1, 1])
                 with c1:
                     st.markdown(f"### {pub['titulo']}")
@@ -273,7 +283,7 @@ elif st.session_state.vista == "mis_publicaciones":
                     st.metric("Consultas", n_consultas)
 
                 if pub["estado"] == "pendiente_pago" and payments.esta_configurado():
-                    checkout_url = payments.crear_preferencia_publicacion(pub["id"], pub["titulo"])
+                    checkout_url = payments.crear_preferencia_publicacion(pub["id"], pub["titulo"], pub["tier"])
                     cp1, cp2 = st.columns(2)
                     with cp1:
                         st.link_button("Pagar publicación", checkout_url, use_container_width=True)
@@ -321,6 +331,8 @@ else:
         portadas = imagenes_portada([pub["id"] for pub in publicaciones])
         for pub in publicaciones:
             with st.container(border=True):
+                if pub.get("tier") == "destacado":
+                    style.kicker("★ Destacado")
                 portada = portadas.get(pub["id"])
                 if portada:
                     c0, c1, c2 = st.columns([1, 3, 1])
