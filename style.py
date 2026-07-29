@@ -150,6 +150,16 @@ def inject():
             color: {ICON_BLUE} !important;
             margin-top: 0.15rem;
         }}
+
+        .cdm-badge-destacado {{
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-size: 0.9rem;
+            color: {GOLD};
+            font-weight: 700;
+            margin-bottom: -0.3rem;
+        }}
         </style>
         """,
         unsafe_allow_html=True,
@@ -158,6 +168,10 @@ def inject():
 
 def kicker(text: str):
     st.markdown(f'<div class="cdm-kicker">{text}</div>', unsafe_allow_html=True)
+
+
+def badge_destacado():
+    st.markdown('<div class="cdm-badge-destacado">★ Destacado</div>', unsafe_allow_html=True)
 
 
 _LOGO_B64 = None

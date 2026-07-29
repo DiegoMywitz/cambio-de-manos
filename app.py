@@ -270,7 +270,7 @@ elif st.session_state.vista == "mis_publicaciones":
         for pub in propias:
             with st.container(border=True):
                 if pub.get("tier") == "destacado":
-                    style.kicker("★ Destacado")
+                    style.badge_destacado()
                 c1, c2, c3 = st.columns([3, 1, 1])
                 with c1:
                     st.markdown(f"### {pub['titulo']}")
@@ -332,7 +332,7 @@ else:
         for pub in publicaciones:
             with st.container(border=True):
                 if pub.get("tier") == "destacado":
-                    style.kicker("★ Destacado")
+                    style.badge_destacado()
                 portada = portadas.get(pub["id"])
                 if portada:
                     c0, c1, c2 = st.columns([1, 3, 1])
