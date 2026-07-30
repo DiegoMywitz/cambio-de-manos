@@ -1,3 +1,5 @@
+import html
+
 import streamlit as st
 import pandas as pd
 
@@ -51,6 +53,23 @@ if "verify_token" in st.query_params:
 
 if "reset_token" in st.query_params:
     auth.requerir_login()
+
+# ---------- Barra superior ----------
+usuario_top = auth.usuario_actual()
+barra_izq, barra_der = st.columns([5, 1])
+with barra_der:
+    if usuario_top:
+        nombre_seguro = html.escape(usuario_top["nombre"])
+        st.markdown(
+            f"<div style='text-align:right; padding-top:0.5rem;'>"
+            f"👋 Bienvenido, <b>{nombre_seguro}</b></div>",
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown(
+            "<div style='text-align:right; padding-top:0.5rem;'>No iniciaste sesión</div>",
+            unsafe_allow_html=True,
+        )
 
 # ---------- Sidebar / navegación ----------
 style.sidebar_logo()
