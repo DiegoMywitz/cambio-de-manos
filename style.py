@@ -64,6 +64,9 @@ def inject():
         [data-testid="stSidebarUserContent"] hr {{
             border-color: {SLATE_LIGHT}44;
         }}
+        [data-testid="stSidebarUserContent"] {{
+            padding-top: 1rem;
+        }}
 
         .stButton > button[kind="primary"] {{
             background-color: {ACCENT_BLUE};
@@ -124,6 +127,23 @@ def inject():
             margin-bottom: -0.5rem;
         }}
 
+        .st-key-logo_click_wrap {{
+            position: relative;
+        }}
+        .st-key-logo_click_wrap [data-testid="stButton"] {{
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            margin: 0 !important;
+        }}
+        .st-key-logo_click_wrap [data-testid="stButton"] button {{
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            border: none;
+            padding: 0;
+        }}
+
         .cdm-logo-panel {{
             display: flex;
             align-items: center;
@@ -132,6 +152,7 @@ def inject():
             border-radius: 4px;
             padding: 0.9rem 1rem;
             margin-bottom: 1rem;
+            cursor: pointer;
         }}
         .cdm-logo-panel img {{
             width: 44px;
@@ -199,15 +220,12 @@ def _logo_base64() -> str:
 
 
 def sidebar_logo():
-    st.sidebar.markdown(
-        f"""
-        <div class="cdm-logo-panel">
-            <img src="data:image/svg+xml;base64,{_logo_base64()}" alt="Cambio de Manos">
-            <div>
-                <div class="cdm-logo-word">CAMBIO<br>DE MANOS</div>
-                <div class="cdm-logo-tagline">COMPRAVENTA DE EMPRESAS</div>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    with st.sidebar.container(key="logo_click_wrap"):
+        st.markdown(
+            f'<div class="cdm-logo-panel"><img src="data:image/svg+xml;base64,{_logo_base64()}" alt="Cambio de Manos"><div><div class="cdm-logo-word">CAMBIO<br>DE MANOS</div><div class="cdm-logo-tagline">COMPRAVENTA DE EMPRESAS</div></div></div>',
+            unsafe_allow_html=True,
+        )
+        if st.button("Ir al inicio", key="logo_home_btn", use_container_width=True):
+            st.session_state.vista = "buscar"
+            st.session_state.pub_seleccionada = None
+            st.rerun()
