@@ -341,7 +341,7 @@ else:
 
     st.caption("Sugerencias rápidas:")
     sug_cols = st.columns(6)
-    for col, sugerencia in zip(sug_cols, ["kiosco", "panadería", "restaurante", "peluquería", "farmacia", "ferretería"]):
+    for col, sugerencia in zip(sug_cols, ["Kiosco", "Panadería", "Restaurante", "Peluquería", "Farmacia", "Ferretería"]):
         with col:
             st.button(sugerencia, key=f"sug_{sugerencia}", use_container_width=True,
                       on_click=_set_sugerencia, args=(sugerencia,))

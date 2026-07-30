@@ -42,6 +42,16 @@ def inject():
         [data-testid="stSidebar"] {{
             background-color: {NAVY_DARK};
             border-right: 1px solid {NAVY};
+            min-width: 320px !important;
+            width: 320px !important;
+            margin-left: 0 !important;
+            transform: none !important;
+            visibility: visible !important;
+        }}
+        [data-testid="stSidebarCollapseButton"],
+        [data-testid="collapsedControl"],
+        [data-testid="stSidebarCollapsedControl"] {{
+            display: none !important;
         }}
         [data-testid="stSidebar"] * {{
             color: #e8ebef !important;
