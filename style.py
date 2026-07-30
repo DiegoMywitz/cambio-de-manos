@@ -44,13 +44,8 @@ def inject():
             border-right: 1px solid {NAVY};
             min-width: 320px !important;
             width: 320px !important;
-            margin-left: 0 !important;
-            transform: none !important;
-            visibility: visible !important;
         }}
-        [data-testid="stSidebarCollapseButton"],
-        [data-testid="collapsedControl"],
-        [data-testid="stSidebarCollapsedControl"] {{
+        [data-testid="stSidebarCollapseButton"] {{
             display: none !important;
         }}
         [data-testid="stSidebar"] * {{
