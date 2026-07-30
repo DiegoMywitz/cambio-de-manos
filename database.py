@@ -19,6 +19,19 @@ PROVINCIAS = [
     "Santa Cruz", "Tierra del Fuego",
 ]
 
+CIUDADES_SUGERIDAS = [
+    "CABA - Palermo", "CABA - Recoleta", "CABA - Belgrano", "CABA - Caballito",
+    "CABA - Villa Urquiza", "CABA - Flores", "CABA - Almagro", "CABA - Once",
+    "La Plata", "Mar del Plata", "Quilmes", "Avellaneda", "San Isidro",
+    "Tigre", "Morón", "Lanús", "Bahía Blanca", "Córdoba Capital", "Villa María",
+    "Río Cuarto", "Rosario", "Santa Fe Capital", "Rafaela", "Mendoza Capital",
+    "San Rafael", "San Miguel de Tucumán", "Salta Capital", "San Salvador de Jujuy",
+    "Resistencia", "Corrientes Capital", "Posadas", "Neuquén Capital",
+    "Comodoro Rivadavia", "Bariloche", "Viedma", "Santa Rosa", "Paraná",
+    "Concordia", "San Juan Capital", "San Luis Capital", "Santiago del Estero Capital",
+    "Río Gallegos", "Ushuaia", "Formosa Capital", "Catamarca Capital", "La Rioja Capital",
+]
+
 
 def _database_url() -> str:
     try:

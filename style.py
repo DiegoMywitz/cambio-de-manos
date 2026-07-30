@@ -8,8 +8,10 @@ SLATE = "#4a5568"
 SLATE_LIGHT = "#8b96a5"
 BORDER = "#dde2e8"
 BG = "#f7f8fa"
-GOLD = "#a9803e"
+GOLD = "#e0a30e"
 ICON_BLUE = "#5b84b1"
+ACCENT_BLUE = "#2d6cdf"
+GOLD_LIGHT = "#fdf1d6"
 
 ASSETS_DIR = Path(__file__).parent / "assets"
 
@@ -64,30 +66,31 @@ def inject():
         }}
 
         .stButton > button[kind="primary"] {{
-            background-color: {NAVY};
-            border: 1px solid {NAVY};
+            background-color: {ACCENT_BLUE};
+            border: 1px solid {ACCENT_BLUE};
             font-family: 'Helvetica Neue', Arial, sans-serif;
             font-weight: 600;
             letter-spacing: 0.3px;
-            border-radius: 2px;
+            border-radius: 4px;
         }}
         .stButton > button[kind="primary"]:hover {{
             background-color: {NAVY_DARK};
             border-color: {NAVY_DARK};
         }}
         .stButton > button:not([kind="primary"]) {{
-            border-radius: 2px;
+            border-radius: 4px;
             border: 1px solid {BORDER};
             color: {NAVY_DARK};
         }}
         .stButton > button:not([kind="primary"]):hover {{
-            border-color: {NAVY};
-            color: {NAVY};
+            border-color: {ACCENT_BLUE};
+            color: {ACCENT_BLUE};
         }}
 
         [data-testid="stMetricValue"] {{
-            color: {NAVY_DARK};
+            color: {ACCENT_BLUE};
             font-family: 'Georgia', serif;
+            font-weight: 700;
         }}
         [data-testid="stMetricLabel"] {{
             color: {SLATE};
@@ -152,13 +155,22 @@ def inject():
         }}
 
         .cdm-badge-destacado {{
+            display: inline-block;
             font-family: 'Helvetica Neue', Arial, sans-serif;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
-            font-size: 0.9rem;
-            color: {GOLD};
+            letter-spacing: 1.3px;
+            font-size: 0.8rem;
+            color: {NAVY_DARK};
+            background-color: {GOLD_LIGHT};
+            border: 1px solid {GOLD};
+            border-radius: 20px;
+            padding: 0.2rem 0.7rem;
             font-weight: 700;
-            margin-bottom: -0.3rem;
+            margin-bottom: 0.4rem;
+        }}
+
+        [data-testid="stVerticalBlockBorderWrapper"]:has(.cdm-badge-destacado) {{
+            border-left: 4px solid {GOLD} !important;
         }}
         </style>
         """,

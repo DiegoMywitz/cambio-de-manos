@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 from database import (
-    RUBROS, PROVINCIAS, init_db, crear_publicacion, listar_publicaciones,
+    RUBROS, PROVINCIAS, CIUDADES_SUGERIDAS, init_db, crear_publicacion, listar_publicaciones,
     obtener_publicacion, crear_consulta, listar_consultas,
     listar_publicaciones_de_usuario, activar_publicacion,
     agregar_imagen, listar_imagenes, imagenes_portada,
@@ -91,7 +91,16 @@ if st.session_state.vista == "publicar":
             titulo = st.text_input("Título del negocio *", placeholder="Ej: Local de panchos en Palermo")
             rubro = st.selectbox("Rubro *", RUBROS)
             provincia = st.selectbox("Provincia *", PROVINCIAS)
-            localidad = st.text_input("Localidad / barrio")
+            localidad_sel = st.selectbox(
+                "Localidad / barrio", ["(elegir o escribir abajo)"] + CIUDADES_SUGERIDAS + ["Otra (escribir)"],
+                help="Empezá a escribir para filtrar las opciones.",
+            )
+            if localidad_sel == "Otra (escribir)":
+                localidad = st.text_input("Escribí la localidad / barrio")
+            elif localidad_sel == "(elegir o escribir abajo)":
+                localidad = ""
+            else:
+                localidad = localidad_sel
             antiguedad = st.number_input("Antigüedad (años)", min_value=0, max_value=150, step=1)
             empleados = st.number_input("Cantidad de empleados", min_value=0, max_value=10000, step=1)
         with col2:
@@ -319,7 +328,19 @@ else:
     with col3:
         precio_max_f = st.number_input("Precio máximo (ARS)", min_value=0.0, step=500000.0, value=0.0)
 
-    texto_f = st.text_input("Buscar por palabra clave", placeholder="Ej: panchos, kiosco, imprenta...")
+    if "texto_busqueda" not in st.session_state:
+        st.session_state.texto_busqueda = ""
+
+    texto_f = st.text_input("Buscar por palabra clave", key="texto_busqueda",
+                             placeholder="Ej: panchos, kiosco, imprenta...")
+
+    st.caption("Sugerencias rápidas:")
+    sug_cols = st.columns(6)
+    for col, sugerencia in zip(sug_cols, ["kiosco", "panadería", "restaurante", "peluquería", "farmacia", "ferretería"]):
+        with col:
+            if st.button(sugerencia, key=f"sug_{sugerencia}", use_container_width=True):
+                st.session_state.texto_busqueda = sugerencia
+                st.rerun()
 
     publicaciones = listar_publicaciones(
         rubro=rubro_f, provincia=provincia_f,
