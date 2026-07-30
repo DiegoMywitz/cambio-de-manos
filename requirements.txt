@@ -2,4 +2,3 @@ streamlit
 mercadopago
 psycopg2-binary
 supabase
-plotly

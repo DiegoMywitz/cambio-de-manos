@@ -201,19 +201,6 @@ _SELECT_PUB_CON_CONTACTO = """
 """
 
 
-def listar_conteo_por_provincia():
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute(
-        "SELECT provincia, COUNT(*) AS cantidad FROM publicaciones "
-        "WHERE estado = 'activa' GROUP BY provincia"
-    )
-    rows = cur.fetchall()
-    cur.close()
-    conn.close()
-    return [(r["provincia"], r["cantidad"]) for r in rows]
-
-
 def listar_publicaciones(rubro=None, provincia=None, precio_max=None, texto=None):
     conn = get_connection()
     cur = conn.cursor()
