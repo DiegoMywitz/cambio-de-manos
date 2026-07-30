@@ -30,6 +30,10 @@ if "pub_pendiente_pago" not in st.session_state:
     st.session_state.pub_pendiente_pago = None
 
 
+def cap(s):
+    return s[:1].upper() + s[1:] if s else s
+
+
 def money(v):
     if v is None:
         return "No especificado"
@@ -197,7 +201,7 @@ elif st.session_state.vista == "detalle" and st.session_state.pub_seleccionada:
     else:
         st.button("‹ Volver a la búsqueda", on_click=ir_a, args=("buscar",))
         style.kicker(pub["rubro"])
-        st.title(pub["titulo"])
+        st.title(cap(pub["titulo"]))
         st.caption(f"{pub['rubro']} · {pub['localidad'] or ''} {pub['provincia']}")
 
         imagenes = listar_imagenes(pub["id"])
@@ -284,7 +288,7 @@ elif st.session_state.vista == "mis_publicaciones":
                     style.badge_destacado()
                 c1, c2, c3 = st.columns([3, 1, 1])
                 with c1:
-                    st.markdown(f"### {pub['titulo']}")
+                    st.markdown(f"### {cap(pub['titulo'])}")
                     estado_legible = "Pendiente de pago" if pub["estado"] == "pendiente_pago" else pub["estado"].capitalize()
                     st.caption(f"{pub['rubro']} · {pub['localidad'] or ''} {pub['provincia']} · Estado: {estado_legible}")
                 with c2:
@@ -366,7 +370,7 @@ else:
                 else:
                     c1, c2 = st.columns([3, 1])
                 with c1:
-                    st.markdown(f"### {pub['titulo']}")
+                    st.markdown(f"### {cap(pub['titulo'])}")
                     st.caption(f"{pub['rubro']} · {pub['localidad'] or ''} {pub['provincia']}")
                     st.write(pub["descripcion"][:200] + ("..." if len(pub["descripcion"]) > 200 else ""))
                 with c2:
