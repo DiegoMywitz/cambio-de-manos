@@ -329,8 +329,8 @@ else:
     with col3:
         precio_max_f = st.number_input("Precio máximo (ARS)", min_value=0.0, step=500000.0, value=0.0)
 
-    if "texto_busqueda" not in st.session_state:
-        st.session_state.texto_busqueda = ""
+    def _set_sugerencia(valor):
+        st.session_state.texto_busqueda = valor
 
     texto_f = st.text_input("Buscar por palabra clave", key="texto_busqueda",
                              placeholder="Ej: panchos, kiosco, imprenta...")
@@ -339,9 +339,8 @@ else:
     sug_cols = st.columns(6)
     for col, sugerencia in zip(sug_cols, ["kiosco", "panadería", "restaurante", "peluquería", "farmacia", "ferretería"]):
         with col:
-            if st.button(sugerencia, key=f"sug_{sugerencia}", use_container_width=True):
-                st.session_state.texto_busqueda = sugerencia
-                st.rerun()
+            st.button(sugerencia, key=f"sug_{sugerencia}", use_container_width=True,
+                      on_click=_set_sugerencia, args=(sugerencia,))
 
     publicaciones = listar_publicaciones(
         rubro=rubro_f, provincia=provincia_f,
