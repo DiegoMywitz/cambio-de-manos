@@ -357,9 +357,13 @@ else:
     if not publicaciones:
         st.info("Todavía no hay negocios publicados con esos filtros. ¡Sé el primero en publicar uno!")
     else:
+        if "resultados_visibles" not in st.session_state:
+            st.session_state.resultados_visibles = 20
+
         st.caption(f"{len(publicaciones)} negocio(s) encontrado(s)")
-        portadas = imagenes_portada([pub["id"] for pub in publicaciones])
-        for pub in publicaciones:
+        visibles = publicaciones[:st.session_state.resultados_visibles]
+        portadas = imagenes_portada([pub["id"] for pub in visibles])
+        for pub in visibles:
             with st.container(border=True):
                 if pub.get("tier") == "destacado":
                     style.badge_destacado()
@@ -378,3 +382,9 @@ else:
                     st.button("Ver más", key=f"ver_{pub['id']}",
                               on_click=ir_a, args=("detalle", pub["id"]),
                               use_container_width=True)
+
+        restantes = len(publicaciones) - len(visibles)
+        if restantes > 0:
+            if st.button(f"Ver más resultados ({restantes} restantes)", use_container_width=True):
+                st.session_state.resultados_visibles += 20
+                st.rerun()

@@ -57,15 +57,13 @@ def mapa_provincias():
     ))
     fig.update_geos(
         scope="south america",
-        center=dict(lon=-65, lat=-38),
-        projection_scale=2.6,
         showland=True, landcolor="#f0f2f5",
         showocean=True, oceancolor="#f7f8fa",
         showcountries=True, countrycolor="#c9d2de",
         showsubunits=False,
         showframe=False,
         bgcolor="rgba(0,0,0,0)",
-        fitbounds=False,
+        fitbounds="locations",
     )
     fig.update_layout(
         margin=dict(l=0, r=0, t=0, b=0),
