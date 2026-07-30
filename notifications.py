@@ -59,3 +59,36 @@ def notificar_nueva_consulta(email_vendedor: str, titulo_publicacion: str,
         "Ingresá a Cambio de Manos, sección 'Mis publicaciones', para ver los datos de contacto."
     )
     return enviar_email(email_vendedor, asunto, cuerpo)
+
+
+def notificar_verificacion_email(email: str, nombre: str, link: str) -> bool:
+    asunto = "Cambio de Manos: confirmá tu email"
+    cuerpo = (
+        f"Hola {nombre},\n\n"
+        "Gracias por crear tu cuenta en Cambio de Manos. Para confirmar tu email, ingresá a este link:\n"
+        f"{link}\n\n"
+        "Si vos no creaste esta cuenta, podés ignorar este email."
+    )
+    return enviar_email(email, asunto, cuerpo)
+
+
+def notificar_alerta_busqueda(email: str, nombre: str, publicaciones: list) -> bool:
+    asunto = f"Cambio de Manos: {len(publicaciones)} negocio(s) nuevo(s) que te pueden interesar"
+    lineas = [f"Hola {nombre},\n", "Aparecieron negocios nuevos que coinciden con una búsqueda que guardaste:\n"]
+    for pub in publicaciones:
+        precio = f"${pub['precio_venta']:,.0f}".replace(",", ".") if pub["precio_venta"] else "Precio no especificado"
+        lineas.append(f"- {pub['titulo']} ({pub['rubro']}, {pub['provincia']}) — {precio}")
+    lineas.append("\nIngresá a Cambio de Manos para ver el detalle y dejar tu consulta.")
+    cuerpo = "\n".join(lineas)
+    return enviar_email(email, asunto, cuerpo)
+
+
+def notificar_reset_password(email: str, nombre: str, link: str) -> bool:
+    asunto = "Cambio de Manos: recuperar tu contraseña"
+    cuerpo = (
+        f"Hola {nombre},\n\n"
+        "Recibimos un pedido para restablecer tu contraseña en Cambio de Manos.\n\n"
+        f"Para elegir una nueva contraseña, ingresá a este link (válido por 1 hora):\n{link}\n\n"
+        "Si vos no pediste esto, podés ignorar este email: tu contraseña actual sigue funcionando."
+    )
+    return enviar_email(email, asunto, cuerpo)

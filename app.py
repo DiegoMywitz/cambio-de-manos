@@ -4,8 +4,10 @@ import pandas as pd
 from database import (
     RUBROS, PROVINCIAS, CIUDADES_SUGERIDAS, init_db, crear_publicacion, listar_publicaciones,
     obtener_publicacion, crear_consulta, listar_consultas,
-    listar_publicaciones_de_usuario, activar_publicacion,
+    listar_publicaciones_de_usuario, activar_publicacion, cambiar_estado_publicacion,
     agregar_imagen, listar_imagenes, imagenes_portada,
+    es_favorito, agregar_favorito, quitar_favorito, listar_favoritos_de_usuario,
+    crear_alerta, listar_alertas_de_usuario, eliminar_alerta,
 )
 import style
 import auth
@@ -44,6 +46,12 @@ def ir_a(vista, pub_id=None):
     st.session_state.pub_seleccionada = pub_id
 
 
+if "verify_token" in st.query_params:
+    auth.procesar_verificacion()
+
+if "reset_token" in st.query_params:
+    auth.requerir_login()
+
 # ---------- Sidebar / navegación ----------
 style.sidebar_logo()
 st.sidebar.caption("Transferencia de fondos de comercio y empresas en Argentina.")
@@ -56,6 +64,10 @@ usuario = auth.usuario_actual()
 if usuario:
     st.sidebar.button("Mis publicaciones", use_container_width=True,
                        on_click=ir_a, args=("mis_publicaciones",))
+    st.sidebar.button("Mis favoritos", use_container_width=True,
+                       on_click=ir_a, args=("favoritos",))
+    st.sidebar.button("Mis alertas", use_container_width=True,
+                       on_click=ir_a, args=("alertas",))
 
 st.sidebar.divider()
 st.sidebar.markdown(
@@ -69,6 +81,8 @@ st.sidebar.divider()
 
 if usuario:
     st.sidebar.caption(f"Sesión iniciada como **{usuario['nombre']}**")
+    if notifications.esta_configurado() and not usuario.get("email_verificado"):
+        st.sidebar.caption("⚠️ Todavía no confirmaste tu email. Revisá tu bandeja de entrada.")
     st.sidebar.button("Cerrar sesión", use_container_width=True,
                        on_click=lambda: (auth.cerrar_sesion(), ir_a("buscar")))
 else:
@@ -230,6 +244,16 @@ elif st.session_state.vista == "detalle" and st.session_state.pub_seleccionada:
         usuario = auth.usuario_actual()
         es_dueno = usuario and usuario["id"] == pub["usuario_id"]
 
+        if usuario and not es_dueno:
+            if es_favorito(usuario["id"], pub["id"]):
+                if st.button("★ Quitar de favoritos", key=f"fav_detalle_{pub['id']}"):
+                    quitar_favorito(usuario["id"], pub["id"])
+                    st.rerun()
+            else:
+                if st.button("☆ Guardar en favoritos", key=f"fav_detalle_{pub['id']}"):
+                    agregar_favorito(usuario["id"], pub["id"])
+                    st.rerun()
+
         if es_dueno:
             st.subheader("Consultas recibidas")
             consultas = listar_consultas(pub["id"])
@@ -310,9 +334,90 @@ elif st.session_state.vista == "mis_publicaciones":
                             else:
                                 st.warning("Todavía no encontramos el pago acreditado.")
                 else:
-                    st.button("Ver", key=f"mis_ver_{pub['id']}",
+                    cb1, cb2, cb3 = st.columns(3)
+                    with cb1:
+                        st.button("Ver", key=f"mis_ver_{pub['id']}",
+                                  on_click=ir_a, args=("detalle", pub["id"]),
+                                  use_container_width=True)
+                    with cb2:
+                        if pub["estado"] == "activa":
+                            if st.button("Pausar", key=f"pausar_{pub['id']}", use_container_width=True):
+                                cambiar_estado_publicacion(pub["id"], "pausada")
+                                st.rerun()
+                        elif pub["estado"] == "pausada":
+                            if st.button("Reactivar", key=f"reactivar_{pub['id']}", use_container_width=True):
+                                cambiar_estado_publicacion(pub["id"], "activa")
+                                st.rerun()
+                    with cb3:
+                        if pub["estado"] in ("activa", "pausada"):
+                            if st.button("Marcar como vendida", key=f"vendida_{pub['id']}", use_container_width=True):
+                                cambiar_estado_publicacion(pub["id"], "vendida")
+                                st.rerun()
+                        else:
+                            if st.button("Reactivar publicación", key=f"revender_{pub['id']}", use_container_width=True):
+                                cambiar_estado_publicacion(pub["id"], "activa")
+                                st.rerun()
+
+# ---------- Vista: mis favoritos ----------
+elif st.session_state.vista == "favoritos":
+    auth.requerir_login()
+    usuario = auth.usuario_actual()
+
+    style.kicker("Panel del comprador")
+    st.title("Mis favoritos")
+
+    guardados = listar_favoritos_de_usuario(usuario["id"])
+    if not guardados:
+        st.info("Todavía no guardaste ningún negocio. Marcá ☆ Guardar en un negocio que te interese.")
+    else:
+        portadas = imagenes_portada([pub["id"] for pub in guardados])
+        for pub in guardados:
+            with st.container(border=True):
+                if pub.get("tier") == "destacado":
+                    style.badge_destacado()
+                portada = portadas.get(pub["id"])
+                if portada:
+                    c0, c1, c2 = st.columns([1, 3, 1])
+                    c0.image(portada, use_container_width=True)
+                else:
+                    c1, c2 = st.columns([3, 1])
+                with c1:
+                    st.markdown(f"### {cap(pub['titulo'])}")
+                    st.caption(f"{pub['rubro']} · {pub['localidad'] or ''} {pub['provincia']}")
+                with c2:
+                    st.metric("Precio", money(pub["precio_venta"]))
+                    st.button("Ver más", key=f"fav_ver_{pub['id']}",
                               on_click=ir_a, args=("detalle", pub["id"]),
                               use_container_width=True)
+                    if st.button("★ Quitar", key=f"fav_quitar_{pub['id']}", use_container_width=True):
+                        quitar_favorito(usuario["id"], pub["id"])
+                        st.rerun()
+
+# ---------- Vista: mis alertas ----------
+elif st.session_state.vista == "alertas":
+    auth.requerir_login()
+    usuario = auth.usuario_actual()
+
+    style.kicker("Panel del comprador")
+    st.title("Mis alertas de búsqueda")
+    st.caption("Te avisamos por email cuando aparezca un negocio nuevo que coincida con estos filtros.")
+
+    alertas = listar_alertas_de_usuario(usuario["id"])
+    if not alertas:
+        st.info("Todavía no guardaste ninguna alerta. Podés crear una desde 'Buscar oportunidades'.")
+    else:
+        for alerta in alertas:
+            with st.container(border=True):
+                precio_txt = money(alerta["precio_max"]) if alerta["precio_max"] else "sin tope"
+                st.markdown(
+                    f"**Rubro:** {alerta['rubro'] or 'Todos'} · "
+                    f"**Provincia:** {alerta['provincia'] or 'Todas'} · "
+                    f"**Precio máx.:** {precio_txt}"
+                    + (f" · **Palabra clave:** {alerta['texto']}" if alerta["texto"] else "")
+                )
+                if st.button("Eliminar alerta", key=f"del_alerta_{alerta['id']}"):
+                    eliminar_alerta(alerta["id"], usuario["id"])
+                    st.rerun()
 
 # ---------- Vista: buscar (default) ----------
 else:
@@ -342,6 +447,17 @@ else:
             st.button(sugerencia, key=f"sug_{sugerencia}", use_container_width=True,
                       on_click=_set_sugerencia, args=(sugerencia,))
 
+    if usuario:
+        if st.button("🔔 Guardar esta búsqueda como alerta"):
+            crear_alerta(
+                usuario["id"],
+                rubro=rubro_f if rubro_f != "Todos" else None,
+                provincia=provincia_f if provincia_f != "Todas" else None,
+                precio_max=precio_max_f if precio_max_f > 0 else None,
+                texto=texto_f if texto_f else None,
+            )
+            st.success("Alerta guardada. Te avisaremos por email cuando aparezcan negocios nuevos que coincidan.")
+
     publicaciones = listar_publicaciones(
         rubro=rubro_f, provincia=provincia_f,
         precio_max=precio_max_f if precio_max_f > 0 else None,
@@ -363,6 +479,19 @@ else:
             with st.container(border=True):
                 if pub.get("tier") == "destacado":
                     style.badge_destacado()
+
+                if usuario:
+                    ct1, ct2 = st.columns([10, 1])
+                    with ct2:
+                        if es_favorito(usuario["id"], pub["id"]):
+                            if st.button("★", key=f"fav_{pub['id']}", help="Quitar de favoritos"):
+                                quitar_favorito(usuario["id"], pub["id"])
+                                st.rerun()
+                        else:
+                            if st.button("☆", key=f"fav_{pub['id']}", help="Guardar en favoritos"):
+                                agregar_favorito(usuario["id"], pub["id"])
+                                st.rerun()
+
                 portada = portadas.get(pub["id"])
                 if portada:
                     c0, c1, c2 = st.columns([1, 3, 1])

@@ -1,5 +1,6 @@
 import hashlib
 import os
+import secrets
 
 import psycopg2
 import psycopg2.extras
@@ -65,7 +66,19 @@ def init_db():
             telefono TEXT,
             password_hash TEXT NOT NULL,
             password_salt TEXT NOT NULL,
+            email_verificado BOOLEAN DEFAULT FALSE,
             fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS email_verificado BOOLEAN DEFAULT FALSE;
+
+        CREATE TABLE IF NOT EXISTS verificaciones_email (
+            id SERIAL PRIMARY KEY,
+            usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
+            token TEXT NOT NULL UNIQUE,
+            usado BOOLEAN DEFAULT FALSE,
+            fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            fecha_expiracion TIMESTAMP NOT NULL
         );
 
         CREATE TABLE IF NOT EXISTS publicaciones (
@@ -104,6 +117,34 @@ def init_db():
             url TEXT NOT NULL,
             orden INTEGER DEFAULT 0,
             fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS favoritos (
+            id SERIAL PRIMARY KEY,
+            usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
+            publicacion_id INTEGER NOT NULL REFERENCES publicaciones(id),
+            fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE (usuario_id, publicacion_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS alertas_busqueda (
+            id SERIAL PRIMARY KEY,
+            usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
+            rubro TEXT,
+            provincia TEXT,
+            precio_max DOUBLE PRECISION,
+            texto TEXT,
+            fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            ultima_revision TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS password_resets (
+            id SERIAL PRIMARY KEY,
+            usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
+            token TEXT NOT NULL UNIQUE,
+            usado BOOLEAN DEFAULT FALSE,
+            fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            fecha_expiracion TIMESTAMP NOT NULL
         );
         """
     )
@@ -161,6 +202,99 @@ def verificar_password(usuario, password: str) -> bool:
     return hashed == usuario["password_hash"]
 
 
+def crear_token_verificacion(usuario_id: int, horas_validez: int = 48) -> str:
+    token = secrets.token_urlsafe(32)
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        INSERT INTO verificaciones_email (usuario_id, token, fecha_expiracion)
+        VALUES (%s, %s, NOW() + %s * INTERVAL '1 hour')
+        """,
+        (usuario_id, token, horas_validez),
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+    return token
+
+
+def verificar_email_con_token(token: str) -> bool:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT * FROM verificaciones_email
+        WHERE token = %s AND usado = FALSE AND fecha_expiracion > NOW()
+        """,
+        (token,),
+    )
+    row = cur.fetchone()
+    if row is None:
+        cur.close()
+        conn.close()
+        return False
+
+    cur.execute("UPDATE usuarios SET email_verificado = TRUE WHERE id = %s", (row["usuario_id"],))
+    cur.execute("UPDATE verificaciones_email SET usado = TRUE WHERE token = %s", (token,))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return True
+
+
+def crear_token_reset(usuario_id: int, horas_validez: int = 1) -> str:
+    token = secrets.token_urlsafe(32)
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        INSERT INTO password_resets (usuario_id, token, fecha_expiracion)
+        VALUES (%s, %s, NOW() + %s * INTERVAL '1 hour')
+        """,
+        (usuario_id, token, horas_validez),
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+    return token
+
+
+def obtener_reset_valido(token: str):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT r.*, u.email, u.nombre FROM password_resets r
+        JOIN usuarios u ON u.id = r.usuario_id
+        WHERE r.token = %s AND r.usado = FALSE AND r.fecha_expiracion > NOW()
+        """,
+        (token,),
+    )
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+    return row
+
+
+def actualizar_password_con_token(token: str, password_nueva: str) -> bool:
+    reset = obtener_reset_valido(token)
+    if reset is None:
+        return False
+    hashed, salt = _hash_password(password_nueva)
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE usuarios SET password_hash = %s, password_salt = %s WHERE id = %s",
+        (hashed, salt, reset["usuario_id"]),
+    )
+    cur.execute("UPDATE password_resets SET usado = TRUE WHERE token = %s", (token,))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return True
+
+
 def crear_publicacion(data: dict, estado: str = "activa", tier: str = "basico") -> int:
     conn = get_connection()
     cur = conn.cursor()
@@ -188,6 +322,16 @@ def activar_publicacion(pub_id: int):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("UPDATE publicaciones SET estado = 'activa' WHERE id = %s", (pub_id,))
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
+def cambiar_estado_publicacion(pub_id: int, estado: str):
+    """estado válido: activa, pausada, vendida"""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("UPDATE publicaciones SET estado = %s WHERE id = %s", (estado, pub_id))
     conn.commit()
     cur.close()
     conn.close()
@@ -305,6 +449,160 @@ def listar_imagenes(pub_id: int):
     cur.execute(
         "SELECT * FROM imagenes_publicacion WHERE publicacion_id = %s ORDER BY orden, id",
         (pub_id,),
+    )
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows
+
+
+def crear_alerta(usuario_id: int, rubro=None, provincia=None, precio_max=None, texto=None) -> int:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        INSERT INTO alertas_busqueda (usuario_id, rubro, provincia, precio_max, texto)
+        VALUES (%s, %s, %s, %s, %s) RETURNING id
+        """,
+        (usuario_id, rubro, provincia, precio_max, texto),
+    )
+    new_id = cur.fetchone()["id"]
+    conn.commit()
+    cur.close()
+    conn.close()
+    return new_id
+
+
+def listar_alertas_de_usuario(usuario_id: int):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT * FROM alertas_busqueda WHERE usuario_id = %s ORDER BY fecha_creacion DESC",
+        (usuario_id,),
+    )
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows
+
+
+def eliminar_alerta(alerta_id: int, usuario_id: int):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "DELETE FROM alertas_busqueda WHERE id = %s AND usuario_id = %s",
+        (alerta_id, usuario_id),
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
+def listar_todas_las_alertas():
+    """Para el job externo: todas las alertas junto con el email del usuario."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT a.*, u.email, u.nombre
+        FROM alertas_busqueda a
+        JOIN usuarios u ON u.id = a.usuario_id
+        """
+    )
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows
+
+
+def publicaciones_nuevas_para_alerta(alerta) -> list:
+    conn = get_connection()
+    cur = conn.cursor()
+    query = _SELECT_PUB_CON_CONTACTO + " WHERE p.estado = 'activa' AND p.fecha_creacion > %s"
+    params = [alerta["ultima_revision"]]
+
+    if alerta["rubro"] and alerta["rubro"] != "Todos":
+        query += " AND p.rubro = %s"
+        params.append(alerta["rubro"])
+    if alerta["provincia"] and alerta["provincia"] != "Todas":
+        query += " AND p.provincia = %s"
+        params.append(alerta["provincia"])
+    if alerta["precio_max"]:
+        query += " AND (p.precio_venta IS NULL OR p.precio_venta <= %s)"
+        params.append(alerta["precio_max"])
+    if alerta["texto"]:
+        query += " AND (p.titulo ILIKE %s OR p.descripcion ILIKE %s)"
+        like = f"%{alerta['texto']}%"
+        params.extend([like, like])
+
+    query += " ORDER BY p.fecha_creacion DESC"
+    cur.execute(query, params)
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows
+
+
+def actualizar_ultima_revision(alerta_id: int):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE alertas_busqueda SET ultima_revision = NOW() WHERE id = %s",
+        (alerta_id,),
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
+def es_favorito(usuario_id: int, pub_id: int) -> bool:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT 1 FROM favoritos WHERE usuario_id = %s AND publicacion_id = %s",
+        (usuario_id, pub_id),
+    )
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+    return row is not None
+
+
+def agregar_favorito(usuario_id: int, pub_id: int):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO favoritos (usuario_id, publicacion_id) VALUES (%s, %s) "
+        "ON CONFLICT (usuario_id, publicacion_id) DO NOTHING",
+        (usuario_id, pub_id),
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
+def quitar_favorito(usuario_id: int, pub_id: int):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "DELETE FROM favoritos WHERE usuario_id = %s AND publicacion_id = %s",
+        (usuario_id, pub_id),
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
+def listar_favoritos_de_usuario(usuario_id: int):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        _SELECT_PUB_CON_CONTACTO + """
+        JOIN favoritos f ON f.publicacion_id = p.id
+        WHERE f.usuario_id = %s
+        ORDER BY f.fecha_creacion DESC
+        """,
+        (usuario_id,),
     )
     rows = cur.fetchall()
     cur.close()
