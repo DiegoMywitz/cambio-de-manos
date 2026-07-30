@@ -12,9 +12,11 @@ import auth
 import notifications
 import payments
 import images
+import geo
 
 st.set_page_config(page_title="Cambio de Manos",
-                    page_icon=str(style.ASSETS_DIR / "favicon.png"), layout="wide")
+                    page_icon=str(style.ASSETS_DIR / "favicon.png"), layout="wide",
+                    initial_sidebar_state="expanded")
 style.inject()
 init_db()
 
@@ -305,6 +307,9 @@ else:
     style.kicker("Oportunidades disponibles")
     st.title("Fondos de comercio y empresas en venta")
     st.caption("Un primer paso para conocer la contraparte, antes de compartir información confidencial.")
+
+    with st.expander("Ver mapa de negocios por provincia", expanded=False):
+        st.plotly_chart(geo.mapa_provincias(), use_container_width=True, config={"displayModeBar": False})
 
     col1, col2, col3 = st.columns(3)
     with col1:

@@ -2,3 +2,6 @@ __pycache__/
 *.pyc
 *.db
 .streamlit/secrets.toml
+*.url
+Logo_Cambio_de_Manos.png
+logo_icon_test.png
