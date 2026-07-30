@@ -313,6 +313,7 @@ elif st.session_state.vista == "mis_publicaciones":
 
 # ---------- Vista: buscar (default) ----------
 else:
+    style.main_logo()
     style.kicker("Oportunidades disponibles")
     st.title("Fondos de comercio y empresas en venta")
     st.caption("Un primer paso para conocer la contraparte, antes de compartir información confidencial.")

@@ -32,6 +32,7 @@ def inject():
             font-family: 'Georgia', 'Times New Roman', serif !important;
             color: {NAVY_DARK} !important;
             letter-spacing: 0.2px;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.65), 0 2px 4px rgba(15,38,71,0.18);
         }}
 
         p, span, label, div, li {{
@@ -154,6 +155,11 @@ def inject():
             margin-bottom: 1rem;
             cursor: pointer;
         }}
+        .cdm-logo-panel.cdm-logo-panel--static {{
+            cursor: default;
+            padding: 0.4rem 0 1.1rem 0;
+            background-color: transparent;
+        }}
         .cdm-logo-panel img {{
             width: 44px;
             height: 44px;
@@ -166,6 +172,7 @@ def inject():
             line-height: 1.05;
             letter-spacing: 0.3px;
             color: {NAVY_DARK} !important;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.7), 0 2px 3px rgba(15,38,71,0.2);
         }}
         .cdm-logo-tagline {{
             font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -179,15 +186,12 @@ def inject():
             display: inline-block;
             font-family: 'Helvetica Neue', Arial, sans-serif;
             text-transform: uppercase;
-            letter-spacing: 1.3px;
-            font-size: 0.8rem;
-            color: {NAVY_DARK};
-            background-color: {GOLD_LIGHT};
-            border: 1px solid {GOLD};
-            border-radius: 20px;
-            padding: 0.2rem 0.7rem;
+            letter-spacing: 1.4px;
+            font-size: 1rem;
+            color: {GOLD};
             font-weight: 700;
-            margin-bottom: 0.4rem;
+            margin-bottom: 0.2rem;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.6), 0 1px 2px rgba(15,38,71,0.15);
         }}
 
         [data-testid="stVerticalBlockBorderWrapper"]:has(.cdm-badge-destacado) {{
@@ -217,6 +221,13 @@ def _logo_base64() -> str:
         svg_bytes = (ASSETS_DIR / "logo.svg").read_bytes()
         _LOGO_B64 = base64.b64encode(svg_bytes).decode("ascii")
     return _LOGO_B64
+
+
+def main_logo():
+    st.markdown(
+        f'<div class="cdm-logo-panel cdm-logo-panel--static"><img src="data:image/svg+xml;base64,{_logo_base64()}" alt="Cambio de Manos"><div><div class="cdm-logo-word">CAMBIO<br>DE MANOS</div><div class="cdm-logo-tagline">COMPRAVENTA DE EMPRESAS</div></div></div>',
+        unsafe_allow_html=True,
+    )
 
 
 def sidebar_logo():
