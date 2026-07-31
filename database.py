@@ -99,11 +99,13 @@ def init_db():
             estado TEXT DEFAULT 'activa',
             tier TEXT DEFAULT 'basico',
             es_franquicia BOOLEAN DEFAULT FALSE,
+            fecha_venta TIMESTAMP,
             fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
         ALTER TABLE publicaciones ADD COLUMN IF NOT EXISTS tier TEXT DEFAULT 'basico';
         ALTER TABLE publicaciones ADD COLUMN IF NOT EXISTS es_franquicia BOOLEAN DEFAULT FALSE;
+        ALTER TABLE publicaciones ADD COLUMN IF NOT EXISTS fecha_venta TIMESTAMP;
 
         CREATE TABLE IF NOT EXISTS consultas (
             id SERIAL PRIMARY KEY,
@@ -337,10 +339,33 @@ def cambiar_estado_publicacion(pub_id: int, estado: str):
     """estado válido: activa, pausada, vendida"""
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("UPDATE publicaciones SET estado = %s WHERE id = %s", (estado, pub_id))
+    if estado == "vendida":
+        cur.execute("UPDATE publicaciones SET estado = %s, fecha_venta = NOW() WHERE id = %s", (estado, pub_id))
+    else:
+        cur.execute("UPDATE publicaciones SET estado = %s WHERE id = %s", (estado, pub_id))
     conn.commit()
     cur.close()
     conn.close()
+
+
+def listar_vendidos_recientes(limite: int = 6):
+    """Para prueba social: rubro/ubicación de negocios vendidos, sin exponer precio final ni datos de contacto."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT titulo, rubro, provincia, localidad, fecha_venta
+        FROM publicaciones
+        WHERE estado = 'vendida'
+        ORDER BY fecha_venta DESC NULLS LAST, fecha_creacion DESC
+        LIMIT %s
+        """,
+        (limite,),
+    )
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows
 
 
 _SELECT_PUB_CON_CONTACTO = """

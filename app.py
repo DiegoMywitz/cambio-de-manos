@@ -7,6 +7,7 @@ from database import (
     RUBROS, PROVINCIAS, CIUDADES_SUGERIDAS, init_db, crear_publicacion, listar_publicaciones,
     obtener_publicacion, crear_consulta, listar_consultas, marcar_consulta_respondida,
     listar_publicaciones_de_usuario, activar_publicacion, cambiar_estado_publicacion,
+    listar_vendidos_recientes,
     agregar_imagen, listar_imagenes, imagenes_portada,
     es_favorito, agregar_favorito, quitar_favorito, listar_favoritos_de_usuario,
     crear_alerta, listar_alertas_de_usuario, eliminar_alerta,
@@ -568,6 +569,11 @@ else:
     style.kicker("Oportunidades disponibles")
     st.title("Fondos de comercio y empresas en venta")
     st.caption("Un primer paso para conocer la contraparte, antes de compartir información confidencial.")
+
+    vendidos = listar_vendidos_recientes(limite=6)
+    if vendidos:
+        items = [f"{cap(v['titulo'])} ({v['provincia']})" for v in vendidos]
+        st.success("✅ Vendidos recientemente: " + " · ".join(items))
 
     col1, col2, col3 = st.columns(3)
     with col1:
