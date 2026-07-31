@@ -203,6 +203,24 @@ def inject():
             border-left: 4px solid {GOLD} !important;
         }}
 
+        .cdm-badge-franquicia {{
+            display: inline-block;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #ffffff;
+            background-color: {ACCENT_BLUE};
+            border-radius: 999px;
+            padding: 0.2rem 0.7rem;
+            margin-bottom: 0.4rem;
+        }}
+
+        [data-testid="stVerticalBlockBorderWrapper"]:has(.cdm-badge-franquicia):not(:has(.cdm-badge-destacado)) {{
+            border-left: 4px solid {ACCENT_BLUE} !important;
+        }}
+
         /* En celulares el sidebar fijo de 320px y sin botón para cerrar tapa toda la
            pantalla. Restauramos el comportamiento normal (colapsable) solo en mobile. */
         @media (max-width: 640px) {{
@@ -226,6 +244,10 @@ def kicker(text: str):
 
 def badge_destacado():
     st.markdown('<div class="cdm-badge-destacado">★ Destacado</div>', unsafe_allow_html=True)
+
+
+def badge_franquicia():
+    st.markdown('<div class="cdm-badge-franquicia">🏪 Franquicia</div>', unsafe_allow_html=True)
 
 
 _LOGO_B64 = None

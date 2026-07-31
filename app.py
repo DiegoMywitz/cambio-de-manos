@@ -79,6 +79,8 @@ st.sidebar.button("Buscar oportunidades", use_container_width=True,
                    on_click=ir_a, args=("buscar",))
 st.sidebar.button("Publicar mi negocio", use_container_width=True,
                    on_click=ir_a, args=("publicar",))
+st.sidebar.button("🏪 Franquicias", use_container_width=True,
+                   on_click=ir_a, args=("franquicias",))
 
 usuario = auth.usuario_actual()
 if usuario:
@@ -151,6 +153,11 @@ if st.session_state.vista == "publicar":
             resultado = st.number_input("Resultado / ganancia mensual (ARS)", min_value=0.0, step=50000.0)
             incluye_inmueble = st.checkbox("Incluye el inmueble en la venta")
             motivo_venta = st.text_input("Motivo de la venta", placeholder="Ej: cambio de rubro, jubilación, mudanza")
+            es_franquicia = st.checkbox(
+                "🏪 Es una oferta de franquicia",
+                help="Marcá esto si estás ofreciendo tu marca en franquicia (no la venta de un negocio existente). "
+                     "Aparece destacada en la sección 'Franquicias'.",
+            )
 
         descripcion = st.text_area("Descripción del negocio *",
                                     placeholder="Contá qué vende, por qué es una buena oportunidad, estado del local, equipamiento incluido, etc.")
@@ -198,6 +205,7 @@ if st.session_state.vista == "publicar":
                     "empleados": empleados or None,
                     "incluye_inmueble": int(incluye_inmueble),
                     "motivo_venta": motivo_venta,
+                    "es_franquicia": es_franquicia,
                 }, estado=estado_inicial, tier=tier)
 
                 if fotos:
@@ -239,6 +247,8 @@ elif st.session_state.vista == "detalle" and st.session_state.pub_seleccionada:
     else:
         st.button("‹ Volver a la búsqueda", on_click=ir_a, args=("buscar",))
         style.kicker(pub["rubro"])
+        if pub.get("es_franquicia"):
+            style.badge_franquicia()
         st.title(cap(pub["titulo"]))
         st.caption(f"{pub['rubro']} · {pub['localidad'] or ''} {pub['provincia']}")
 
@@ -334,6 +344,8 @@ elif st.session_state.vista == "mis_publicaciones":
             with st.container(border=True):
                 if pub.get("tier") == "destacado":
                     style.badge_destacado()
+                if pub.get("es_franquicia"):
+                    style.badge_franquicia()
                 c1, c2, c3 = st.columns([3, 1, 1])
                 with c1:
                     st.markdown(f"### {cap(pub['titulo'])}")
@@ -400,6 +412,8 @@ elif st.session_state.vista == "favoritos":
             with st.container(border=True):
                 if pub.get("tier") == "destacado":
                     style.badge_destacado()
+                if pub.get("es_franquicia"):
+                    style.badge_franquicia()
                 portada = portadas.get(pub["id"])
                 if portada:
                     c0, c1, c2 = st.columns([1, 3, 1])
@@ -417,6 +431,44 @@ elif st.session_state.vista == "favoritos":
                     if st.button("★ Quitar", key=f"fav_quitar_{pub['id']}", use_container_width=True):
                         quitar_favorito(usuario["id"], pub["id"])
                         st.rerun()
+
+# ---------- Vista: franquicias ----------
+elif st.session_state.vista == "franquicias":
+    style.kicker("Oportunidades de franquicia")
+    st.title("🏪 Franquicias disponibles")
+    st.caption("Marcas que ofrecen su modelo de negocio en franquicia, en un espacio propio y destacado.")
+
+    franquicias = listar_publicaciones(solo_franquicias=True)
+    st.divider()
+
+    if not franquicias:
+        st.info(
+            "Todavía no hay franquicias publicadas. Si tenés una marca para franquiciar, "
+            "marcá la opción 'Es una oferta de franquicia' al publicar tu negocio."
+        )
+    else:
+        st.caption(f"{len(franquicias)} franquicia(s) encontrada(s)")
+        portadas = imagenes_portada([pub["id"] for pub in franquicias])
+        for pub in franquicias:
+            with st.container(border=True):
+                style.badge_franquicia()
+                if pub.get("tier") == "destacado":
+                    style.badge_destacado()
+                portada = portadas.get(pub["id"])
+                if portada:
+                    c0, c1, c2 = st.columns([1, 3, 1])
+                    c0.image(portada, use_container_width=True)
+                else:
+                    c1, c2 = st.columns([3, 1])
+                with c1:
+                    st.markdown(f"### {cap(pub['titulo'])}")
+                    st.caption(f"{pub['rubro']} · {pub['localidad'] or ''} {pub['provincia']}")
+                    st.write(pub["descripcion"][:200] + ("..." if len(pub["descripcion"]) > 200 else ""))
+                with c2:
+                    st.metric("Precio", money(pub["precio_venta"]))
+                    st.button("Ver más", key=f"franq_ver_{pub['id']}",
+                              on_click=ir_a, args=("detalle", pub["id"]),
+                              use_container_width=True)
 
 # ---------- Vista: legales ----------
 elif st.session_state.vista == "terminos":
@@ -512,6 +564,8 @@ else:
             with st.container(border=True):
                 if pub.get("tier") == "destacado":
                     style.badge_destacado()
+                if pub.get("es_franquicia"):
+                    style.badge_franquicia()
 
                 if usuario:
                     ct1, ct2 = st.columns([10, 1])
