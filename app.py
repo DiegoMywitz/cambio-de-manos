@@ -17,6 +17,7 @@ import notifications
 import payments
 import images
 import legal
+import valuation
 
 st.set_page_config(page_title="Cambio de Manos",
                     page_icon=str(style.ASSETS_DIR / "favicon.png"), layout="wide",
@@ -81,6 +82,8 @@ st.sidebar.button("Publicar mi negocio", use_container_width=True,
                    on_click=ir_a, args=("publicar",))
 st.sidebar.button("◆ Franquicias", use_container_width=True,
                    on_click=ir_a, args=("franquicias",))
+st.sidebar.button("Cotizá tu negocio", use_container_width=True,
+                   on_click=ir_a, args=("cotizar",))
 
 usuario = auth.usuario_actual()
 if usuario:
@@ -444,6 +447,51 @@ elif st.session_state.vista == "favoritos":
                     if st.button("★ Quitar", key=f"fav_quitar_{pub['id']}", use_container_width=True):
                         quitar_favorito(usuario["id"], pub["id"])
                         st.rerun()
+
+# ---------- Vista: cotizar ----------
+elif st.session_state.vista == "cotizar":
+    style.kicker("Herramienta gratuita")
+    st.title("Cotizá tu negocio")
+    st.caption(
+        "Una estimación orientativa según el rubro, para tener un punto de partida antes de fijar "
+        "un precio de venta. No reemplaza una tasación profesional (contador o especialista en M&A)."
+    )
+
+    col_a, col_b = st.columns(2)
+    with col_a:
+        rubro_cot = st.selectbox("Rubro", RUBROS, key="rubro_cotizar")
+        resultado_cot = st.number_input(
+            "Ganancia / resultado mensual promedio (ARS)", min_value=0.0, step=50000.0, key="resultado_cotizar",
+        )
+    with col_b:
+        facturacion_cot = st.number_input(
+            "Facturación mensual promedio (ARS, opcional)", min_value=0.0, step=50000.0, key="facturacion_cotizar",
+        )
+        antiguedad_cot = st.number_input(
+            "Antigüedad (años, opcional)", min_value=0, max_value=150, step=1, key="antiguedad_cotizar",
+        )
+
+    if st.button("Calcular estimación", type="primary"):
+        resultado = valuation.estimar_valor(rubro_cot, resultado_cot)
+        if resultado is None:
+            st.warning("Ingresá la ganancia mensual promedio para poder estimar un valor.")
+        else:
+            valor_min, valor_max, mult_min, mult_max = resultado
+            st.divider()
+            st.subheader(f"{money(valor_min)} — {money(valor_max)}")
+            st.caption(
+                f"Cálculo: ganancia anual estimada ({money(resultado_cot * 12)}) × múltiplo típico de "
+                f"{rubro_cot} ({mult_min}x a {mult_max}x). Cada rubro tiene un múltiplo distinto porque no "
+                "todos los negocios valen lo mismo por cada peso de ganancia: por ejemplo, un negocio de "
+                "tecnología con ingresos recurrentes suele valer más múltiplos que un local gastronómico, "
+                "que es más volátil y depende más de la ubicación."
+            )
+            st.info(
+                "Esto es solo un punto de partida. El precio final depende de muchos factores que esta "
+                "calculadora no ve: ubicación, contrato de alquiler, cartera de clientes, marca, equipamiento, "
+                "deudas, y la negociación en sí."
+            )
+            st.button("Publicar este negocio con estos datos", on_click=ir_a, args=("publicar",))
 
 # ---------- Vista: franquicias ----------
 elif st.session_state.vista == "franquicias":
