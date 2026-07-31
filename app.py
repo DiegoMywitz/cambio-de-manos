@@ -134,94 +134,112 @@ if st.session_state.vista == "publicar":
     st.caption("Cargue los datos básicos de la operación. La información confidencial se comparte "
                "recién cuando avance con un interesado concreto. Los datos de contacto se toman de su cuenta.")
 
-    with st.form("form_publicar", clear_on_submit=True):
-        col1, col2 = st.columns(2)
-        with col1:
-            titulo = st.text_input("Título del negocio *", placeholder="Ej: Local de panchos en Palermo")
-            rubro = st.selectbox("Rubro *", RUBROS)
-            provincia = st.selectbox("Provincia *", PROVINCIAS)
-            localidad_sel = st.selectbox(
-                "Localidad / barrio", ["(elegir o escribir abajo)"] + CIUDADES_SUGERIDAS + ["Otra (escribir)"],
-                help="Empezá a escribir para filtrar las opciones.",
-            )
-            if localidad_sel == "Otra (escribir)":
-                localidad = st.text_input("Escribí la localidad / barrio")
-            elif localidad_sel == "(elegir o escribir abajo)":
-                localidad = ""
+    # Sin st.form: los campos de dinero (widgets.money_input) necesitan reruns en vivo
+    # para ir formateando con puntos de miles a medida que se escribe, algo que un
+    # st.form no permite (recién dispara on_change al enviar).
+    col1, col2 = st.columns(2)
+    with col1:
+        titulo = st.text_input("Título del negocio *", placeholder="Ej: Local de panchos en Palermo", key="pub_titulo")
+        rubro = st.selectbox("Rubro *", RUBROS, key="pub_rubro")
+        provincia = st.selectbox("Provincia *", PROVINCIAS, key="pub_provincia")
+        localidad_sel = st.selectbox(
+            "Localidad / barrio", ["(elegir o escribir abajo)"] + CIUDADES_SUGERIDAS + ["Otra (escribir)"],
+            help="Empezá a escribir para filtrar las opciones.", key="pub_localidad_sel",
+        )
+        if localidad_sel == "Otra (escribir)":
+            localidad = st.text_input("Escribí la localidad / barrio", key="pub_localidad_otra")
+        elif localidad_sel == "(elegir o escribir abajo)":
+            localidad = ""
+        else:
+            localidad = localidad_sel
+        antiguedad = st.number_input("Antigüedad (años)", min_value=0, max_value=150, step=1, key="pub_antiguedad")
+        empleados = st.number_input("Cantidad de empleados", min_value=0, max_value=10000, step=1, key="pub_empleados")
+    with col2:
+        precio_venta = widgets.money_input("Precio de venta (ARS) *", key="pub_precio_venta")
+        facturacion = widgets.money_input("Facturación mensual promedio (ARS)", key="pub_facturacion")
+        resultado = widgets.money_input("Resultado / ganancia mensual (ARS)", key="pub_resultado")
+        incluye_inmueble = st.checkbox("Incluye el inmueble en la venta", key="pub_incluye_inmueble")
+        motivo_venta = st.text_input("Motivo de la venta", placeholder="Ej: cambio de rubro, jubilación, mudanza",
+                                      key="pub_motivo_venta")
+        es_franquicia = st.checkbox(
+            "◆ Es una oferta de franquicia",
+            help="Marcá esto si estás ofreciendo tu marca en franquicia (no la venta de un negocio existente). "
+                 "Aparece destacada en la sección 'Franquicias'.",
+            key="pub_es_franquicia",
+        )
+
+    descripcion = st.text_area("Descripción del negocio *",
+                                placeholder="Contá qué vende, por qué es una buena oportunidad, estado del local, equipamiento incluido, etc.",
+                                key="pub_descripcion")
+
+    fotos = None
+    if images.esta_configurado():
+        fotos = st.file_uploader("Fotos del negocio (opcional, hasta 5)", type=["jpg", "jpeg", "png"],
+                                  accept_multiple_files=True, key="pub_fotos")
+
+    tier = "basico"
+    if payments.esta_configurado():
+        tier_label = st.radio(
+            "Nivel de publicación",
+            [
+                f"Básico — ${payments.PRECIO_PUBLICACION:,.0f} ARS".replace(",", "."),
+                f"Destacado — ${payments.PRECIO_DESTACADO:,.0f} ARS (aparece primero en la búsqueda)".replace(",", "."),
+            ],
+            key="pub_tier_label",
+        )
+        tier = "destacado" if tier_label.startswith("Destacado") else "basico"
+        st.caption("La publicación se activa una vez confirmado el pago.")
+
+    acepto_pub = st.checkbox(
+        "Declaro que los datos cargados son reales y acepto los Términos y Condiciones y la Política de Privacidad",
+        key="pub_acepto",
+    )
+
+    enviado = st.button("Publicar negocio", type="primary", use_container_width=True)
+
+    if enviado:
+        faltantes = []
+        if not titulo: faltantes.append("Título")
+        if not descripcion: faltantes.append("Descripción")
+        if not precio_venta: faltantes.append("Precio de venta")
+        if not acepto_pub: faltantes.append("Declaración de veracidad y aceptación de Términos y Condiciones")
+
+        if faltantes:
+            st.error("Faltan completar: " + ", ".join(faltantes))
+        else:
+            estado_inicial = "pendiente_pago" if payments.esta_configurado() else "activa"
+            pub_id = crear_publicacion({
+                "usuario_id": auth.usuario_actual()["id"],
+                "titulo": titulo,
+                "rubro": rubro,
+                "provincia": provincia,
+                "localidad": localidad,
+                "descripcion": descripcion,
+                "precio_venta": precio_venta,
+                "facturacion_mensual": facturacion or None,
+                "resultado_mensual": resultado or None,
+                "antiguedad_anios": antiguedad or None,
+                "empleados": empleados or None,
+                "incluye_inmueble": int(incluye_inmueble),
+                "motivo_venta": motivo_venta,
+                "es_franquicia": es_franquicia,
+            }, estado=estado_inicial, tier=tier)
+
+            if fotos:
+                for i, foto in enumerate(fotos[:5]):
+                    url = images.subir_imagen(pub_id, foto.getvalue(), foto.name)
+                    agregar_imagen(pub_id, url, orden=i)
+
+            if estado_inicial == "pendiente_pago":
+                st.session_state.pub_pendiente_pago = pub_id
             else:
-                localidad = localidad_sel
-            antiguedad = st.number_input("Antigüedad (años)", min_value=0, max_value=150, step=1)
-            empleados = st.number_input("Cantidad de empleados", min_value=0, max_value=10000, step=1)
-        with col2:
-            precio_venta = st.number_input("Precio de venta (ARS) *", min_value=0.0, step=100000.0)
-            facturacion = st.number_input("Facturación mensual promedio (ARS)", min_value=0.0, step=50000.0)
-            resultado = st.number_input("Resultado / ganancia mensual (ARS)", min_value=0.0, step=50000.0)
-            incluye_inmueble = st.checkbox("Incluye el inmueble en la venta")
-            motivo_venta = st.text_input("Motivo de la venta", placeholder="Ej: cambio de rubro, jubilación, mudanza")
-            es_franquicia = st.checkbox(
-                "◆ Es una oferta de franquicia",
-                help="Marcá esto si estás ofreciendo tu marca en franquicia (no la venta de un negocio existente). "
-                     "Aparece destacada en la sección 'Franquicias'.",
-            )
+                st.success(f"Publicación registrada con el identificador N.º {pub_id}.")
 
-        descripcion = st.text_area("Descripción del negocio *",
-                                    placeholder="Contá qué vende, por qué es una buena oportunidad, estado del local, equipamiento incluido, etc.")
-
-        fotos = None
-        if images.esta_configurado():
-            fotos = st.file_uploader("Fotos del negocio (opcional, hasta 5)", type=["jpg", "jpeg", "png"],
-                                      accept_multiple_files=True)
-
-        tier = "basico"
-        if payments.esta_configurado():
-            tier_label = st.radio(
-                "Nivel de publicación",
-                [
-                    f"Básico — ${payments.PRECIO_PUBLICACION:,.0f} ARS".replace(",", "."),
-                    f"Destacado — ${payments.PRECIO_DESTACADO:,.0f} ARS (aparece primero en la búsqueda)".replace(",", "."),
-                ],
-            )
-            tier = "destacado" if tier_label.startswith("Destacado") else "basico"
-            st.caption("La publicación se activa una vez confirmado el pago.")
-
-        enviado = st.form_submit_button("Publicar negocio", type="primary", use_container_width=True)
-
-        if enviado:
-            faltantes = []
-            if not titulo: faltantes.append("Título")
-            if not descripcion: faltantes.append("Descripción")
-            if not precio_venta: faltantes.append("Precio de venta")
-
-            if faltantes:
-                st.error("Faltan completar: " + ", ".join(faltantes))
-            else:
-                estado_inicial = "pendiente_pago" if payments.esta_configurado() else "activa"
-                pub_id = crear_publicacion({
-                    "usuario_id": auth.usuario_actual()["id"],
-                    "titulo": titulo,
-                    "rubro": rubro,
-                    "provincia": provincia,
-                    "localidad": localidad,
-                    "descripcion": descripcion,
-                    "precio_venta": precio_venta,
-                    "facturacion_mensual": facturacion or None,
-                    "resultado_mensual": resultado or None,
-                    "antiguedad_anios": antiguedad or None,
-                    "empleados": empleados or None,
-                    "incluye_inmueble": int(incluye_inmueble),
-                    "motivo_venta": motivo_venta,
-                    "es_franquicia": es_franquicia,
-                }, estado=estado_inicial, tier=tier)
-
-                if fotos:
-                    for i, foto in enumerate(fotos[:5]):
-                        url = images.subir_imagen(pub_id, foto.getvalue(), foto.name)
-                        agregar_imagen(pub_id, url, orden=i)
-
-                if estado_inicial == "pendiente_pago":
-                    st.session_state.pub_pendiente_pago = pub_id
-                else:
-                    st.success(f"Publicación registrada con el identificador N.º {pub_id}.")
+            for k in ("pub_titulo", "pub_localidad_otra", "pub_motivo_venta", "pub_descripcion",
+                      "_moneyraw_pub_precio_venta", "_moneyraw_pub_facturacion", "_moneyraw_pub_resultado",
+                      "pub_antiguedad", "pub_empleados", "pub_incluye_inmueble", "pub_es_franquicia", "pub_acepto"):
+                st.session_state.pop(k, None)
+            st.rerun()
 
     pub_pendiente = st.session_state.get("pub_pendiente_pago")
     if pub_pendiente:
@@ -330,9 +348,15 @@ elif st.session_state.vista == "detalle" and st.session_state.pub_seleccionada:
                     mensaje_i = st.text_area(
                         "Mensaje (opcional)",
                         placeholder="Contale al vendedor por qué te interesa, tu experiencia, etc.")
+                    acepto_consulta = st.checkbox(
+                        "Acepto los Términos y Condiciones y la Política de Privacidad "
+                        "(mis datos de contacto se compartirán con el vendedor)"
+                    )
                     enviar_consulta = st.form_submit_button("Enviar consulta", type="primary")
 
-                    if enviar_consulta:
+                    if enviar_consulta and not acepto_consulta:
+                        st.error("Tenés que aceptar los Términos y Condiciones para enviar la consulta.")
+                    elif enviar_consulta:
                         crear_consulta({
                             "publicacion_id": pub["id"],
                             "usuario_id": usuario["id"],

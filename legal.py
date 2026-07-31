@@ -47,12 +47,23 @@ exclusiva responsabilidad de las partes involucradas. Recomendamos siempre
 asesorarse con un contador y un abogado antes de comprar o vender un fondo de
 comercio o una empresa.
 
-**6. Modificaciones**
+**6. Veracidad de la información e indemnidad**
+
+Quien publica un negocio es el único responsable de la veracidad de los datos
+declarados (precio, facturación, ganancia, antigüedad, motivo de venta, y
+cualquier otro dato cargado). Quien deja una consulta es el único responsable
+de la veracidad de sus propios datos de contacto y de las manifestaciones que
+haga en su mensaje. Cada usuario acepta mantener indemne a Cambio de Manos —
+es decir, hacerse cargo y no reclamarle a la plataforma — frente a cualquier
+reclamo, denuncia o acción legal de terceros que se origine en información
+falsa, inexacta o engañosa que ese usuario haya publicado o declarado.
+
+**7. Modificaciones**
 
 Podemos actualizar estos términos en cualquier momento. Los cambios rigen
 desde su publicación en esta misma página.
 
-**7. Contacto**
+**8. Contacto**
 
 Consultas sobre estos términos: cambiodefirma.contacto@gmail.com
 """
