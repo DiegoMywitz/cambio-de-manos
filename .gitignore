@@ -5,3 +5,5 @@ __pycache__/
 *.url
 Logo_Cambio_de_Manos.png
 logo_icon_test.png
+*.log
+.claude/

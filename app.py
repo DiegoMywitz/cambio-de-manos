@@ -16,6 +16,7 @@ import auth
 import notifications
 import payments
 import images
+import legal
 
 st.set_page_config(page_title="Cambio de Manos",
                     page_icon=str(style.ASSETS_DIR / "favicon.png"), layout="wide",
@@ -111,6 +112,11 @@ if not notifications.esta_configurado():
     st.sidebar.caption("Notificaciones por email: no configuradas.")
 if not images.esta_configurado():
     st.sidebar.caption("Fotos de publicaciones: no configuradas.")
+
+st.sidebar.divider()
+leg1, leg2 = st.sidebar.columns(2)
+leg1.button("Términos", use_container_width=True, on_click=ir_a, args=("terminos",))
+leg2.button("Privacidad", use_container_width=True, on_click=ir_a, args=("privacidad",))
 
 # ---------- Vista: publicar ----------
 if st.session_state.vista == "publicar":
@@ -411,6 +417,14 @@ elif st.session_state.vista == "favoritos":
                     if st.button("★ Quitar", key=f"fav_quitar_{pub['id']}", use_container_width=True):
                         quitar_favorito(usuario["id"], pub["id"])
                         st.rerun()
+
+# ---------- Vista: legales ----------
+elif st.session_state.vista == "terminos":
+    st.button("‹ Volver", on_click=ir_a, args=("buscar",))
+    st.markdown(legal.TERMINOS)
+elif st.session_state.vista == "privacidad":
+    st.button("‹ Volver", on_click=ir_a, args=("buscar",))
+    st.markdown(legal.PRIVACIDAD)
 
 # ---------- Vista: mis alertas ----------
 elif st.session_state.vista == "alertas":

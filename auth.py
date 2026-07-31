@@ -8,6 +8,7 @@ from database import (
     crear_token_verificacion, verificar_email_con_token,
 )
 import notifications
+import legal
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 APP_URL = "https://cambiodemanos.streamlit.app/"
@@ -98,12 +99,18 @@ def _form_nueva_password(token: str):
 
 
 def _form_registro():
+    with st.expander("Leer Términos y Condiciones y Política de Privacidad"):
+        st.markdown(legal.TERMINOS)
+        st.divider()
+        st.markdown(legal.PRIVACIDAD)
+
     with st.form("form_registro"):
         nombre = st.text_input("Nombre y apellido")
         email = st.text_input("Email")
         telefono = st.text_input("Teléfono (opcional)")
         password = st.text_input("Contraseña", type="password")
         password2 = st.text_input("Repetir contraseña", type="password")
+        acepto = st.checkbox("Leí y acepto los Términos y Condiciones y la Política de Privacidad")
         enviar = st.form_submit_button("Crear cuenta", type="primary", use_container_width=True)
 
         if enviar:
@@ -115,6 +122,8 @@ def _form_registro():
                 st.error("La contraseña debe tener al menos 6 caracteres.")
             elif password != password2:
                 st.error("Las contraseñas no coinciden.")
+            elif not acepto:
+                st.error("Tenés que aceptar los Términos y Condiciones y la Política de Privacidad para crear la cuenta.")
             elif obtener_usuario_por_email(email) is not None:
                 st.error("Ya existe una cuenta registrada con ese email.")
             else:
