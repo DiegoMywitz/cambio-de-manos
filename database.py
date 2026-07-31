@@ -110,8 +110,11 @@ def init_db():
             publicacion_id INTEGER NOT NULL REFERENCES publicaciones(id),
             usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
             mensaje TEXT,
+            respondida BOOLEAN DEFAULT FALSE,
             fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+
+        ALTER TABLE consultas ADD COLUMN IF NOT EXISTS respondida BOOLEAN DEFAULT FALSE;
 
         CREATE TABLE IF NOT EXISTS imagenes_publicacion (
             id SERIAL PRIMARY KEY,
@@ -434,6 +437,15 @@ def listar_consultas(pub_id: int):
     cur.close()
     conn.close()
     return rows
+
+
+def marcar_consulta_respondida(consulta_id: int):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("UPDATE consultas SET respondida = TRUE WHERE id = %s", (consulta_id,))
+    conn.commit()
+    cur.close()
+    conn.close()
 
 
 def agregar_imagen(pub_id: int, url: str, orden: int = 0):

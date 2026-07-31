@@ -5,7 +5,7 @@ import pandas as pd
 
 from database import (
     RUBROS, PROVINCIAS, CIUDADES_SUGERIDAS, init_db, crear_publicacion, listar_publicaciones,
-    obtener_publicacion, crear_consulta, listar_consultas,
+    obtener_publicacion, crear_consulta, listar_consultas, marcar_consulta_respondida,
     listar_publicaciones_de_usuario, activar_publicacion, cambiar_estado_publicacion,
     agregar_imagen, listar_imagenes, imagenes_portada,
     es_favorito, agregar_favorito, quitar_favorito, listar_favoritos_de_usuario,
@@ -300,6 +300,19 @@ elif st.session_state.vista == "detalle" and st.session_state.pub_seleccionada:
                                 f"{', ' + c['telefono_interesado'] if c['telefono_interesado'] else ''}) — {c['fecha_creacion']}")
                     if c["mensaje"]:
                         st.caption(c["mensaje"])
+                    if c.get("respondida"):
+                        st.caption("✅ Marcada como respondida")
+                    else:
+                        if st.button("Marcar como respondida", key=f"responder_{c['id']}"):
+                            marcar_consulta_respondida(c["id"])
+                            notificado = notifications.notificar_consulta_respondida(
+                                c["email_interesado"], c["nombre_interesado"], pub["titulo"], usuario["nombre"],
+                            )
+                            if notificado:
+                                st.success("Marcada como respondida. Avisamos al interesado por email.")
+                            else:
+                                st.success("Marcada como respondida.")
+                            st.rerun()
         else:
             st.subheader("Manifestar interés")
             st.caption("El vendedor recibirá su consulta con sus datos de cuenta y decidirá si avanza.")

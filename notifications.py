@@ -61,6 +61,18 @@ def notificar_nueva_consulta(email_vendedor: str, titulo_publicacion: str,
     return enviar_email(email_vendedor, asunto, cuerpo)
 
 
+def notificar_consulta_respondida(email_interesado: str, nombre_interesado: str,
+                                   titulo_publicacion: str, nombre_vendedor: str) -> bool:
+    asunto = f"Cambio de Manos: el vendedor respondió tu consulta por '{titulo_publicacion}'"
+    cuerpo = (
+        f"Hola {nombre_interesado},\n\n"
+        f"{nombre_vendedor}, vendedor de \"{titulo_publicacion}\", marcó tu consulta como respondida. "
+        "Es probable que se haya puesto en contacto por teléfono, email o WhatsApp con los datos que dejaste.\n\n"
+        "Si todavía no tuviste noticias, podés escribirle directamente con los datos de contacto de la publicación."
+    )
+    return enviar_email(email_interesado, asunto, cuerpo)
+
+
 def notificar_verificacion_email(email: str, nombre: str, link: str) -> bool:
     asunto = "Cambio de Manos: confirmá tu email"
     cuerpo = (
