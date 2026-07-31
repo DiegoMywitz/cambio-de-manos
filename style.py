@@ -247,7 +247,7 @@ def badge_destacado():
 
 
 def badge_franquicia():
-    st.markdown('<div class="cdm-badge-franquicia">🏪 Franquicia</div>', unsafe_allow_html=True)
+    st.markdown('<div class="cdm-badge-franquicia">◆ Franquicia</div>', unsafe_allow_html=True)
 
 
 _LOGO_B64 = None

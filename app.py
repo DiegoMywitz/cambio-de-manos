@@ -79,7 +79,7 @@ st.sidebar.button("Buscar oportunidades", use_container_width=True,
                    on_click=ir_a, args=("buscar",))
 st.sidebar.button("Publicar mi negocio", use_container_width=True,
                    on_click=ir_a, args=("publicar",))
-st.sidebar.button("🏪 Franquicias", use_container_width=True,
+st.sidebar.button("◆ Franquicias", use_container_width=True,
                    on_click=ir_a, args=("franquicias",))
 
 usuario = auth.usuario_actual()
@@ -154,7 +154,7 @@ if st.session_state.vista == "publicar":
             incluye_inmueble = st.checkbox("Incluye el inmueble en la venta")
             motivo_venta = st.text_input("Motivo de la venta", placeholder="Ej: cambio de rubro, jubilación, mudanza")
             es_franquicia = st.checkbox(
-                "🏪 Es una oferta de franquicia",
+                "◆ Es una oferta de franquicia",
                 help="Marcá esto si estás ofreciendo tu marca en franquicia (no la venta de un negocio existente). "
                      "Aparece destacada en la sección 'Franquicias'.",
             )
@@ -435,7 +435,7 @@ elif st.session_state.vista == "favoritos":
 # ---------- Vista: franquicias ----------
 elif st.session_state.vista == "franquicias":
     style.kicker("Oportunidades de franquicia")
-    st.title("🏪 Franquicias disponibles")
+    st.title("Franquicias disponibles")
     st.caption("Marcas que ofrecen su modelo de negocio en franquicia, en un espacio propio y destacado.")
 
     franquicias = listar_publicaciones(solo_franquicias=True)
