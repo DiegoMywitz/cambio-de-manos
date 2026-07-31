@@ -119,6 +119,8 @@ if not notifications.esta_configurado():
     st.sidebar.caption("Notificaciones por email: no configuradas.")
 if not images.esta_configurado():
     st.sidebar.caption("Fotos de publicaciones: no configuradas.")
+if not payments.esta_configurado():
+    st.sidebar.caption("Pagos con Mercado Pago: no configurados.")
 
 st.sidebar.divider()
 leg1, leg2 = st.sidebar.columns(2)
