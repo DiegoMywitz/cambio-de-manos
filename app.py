@@ -18,6 +18,7 @@ import payments
 import images
 import legal
 import valuation
+import widgets
 
 st.set_page_config(page_title="Cambio de Manos",
                     page_icon=str(style.ASSETS_DIR / "favicon.png"), layout="wide",
@@ -460,13 +461,9 @@ elif st.session_state.vista == "cotizar":
     col_a, col_b = st.columns(2)
     with col_a:
         rubro_cot = st.selectbox("Rubro", RUBROS, key="rubro_cotizar")
-        resultado_cot = st.number_input(
-            "Ganancia / resultado mensual promedio (ARS)", min_value=0.0, step=50000.0, key="resultado_cotizar",
-        )
+        resultado_cot = widgets.money_input("Ganancia / resultado mensual promedio (ARS)", key="resultado_cotizar")
     with col_b:
-        facturacion_cot = st.number_input(
-            "Facturación mensual promedio (ARS, opcional)", min_value=0.0, step=50000.0, key="facturacion_cotizar",
-        )
+        facturacion_cot = widgets.money_input("Facturación mensual promedio (ARS, opcional)", key="facturacion_cotizar")
         antiguedad_cot = st.number_input(
             "Antigüedad (años, opcional)", min_value=0, max_value=150, step=1, key="antiguedad_cotizar",
         )
@@ -578,7 +575,7 @@ else:
     with col2:
         provincia_f = st.selectbox("Provincia", ["Todas"] + PROVINCIAS)
     with col3:
-        precio_max_f = st.number_input("Precio máximo (ARS)", min_value=0.0, step=500000.0, value=0.0)
+        precio_max_f = widgets.money_input("Precio máximo (ARS)", key="precio_max_buscar")
 
     def _set_sugerencia(valor):
         st.session_state.texto_busqueda = valor
