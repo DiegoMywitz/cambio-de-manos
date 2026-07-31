@@ -202,6 +202,18 @@ def inject():
         [data-testid="stVerticalBlockBorderWrapper"]:has(.cdm-badge-destacado) {{
             border-left: 4px solid {GOLD} !important;
         }}
+
+        /* En celulares el sidebar fijo de 320px y sin botón para cerrar tapa toda la
+           pantalla. Restauramos el comportamiento normal (colapsable) solo en mobile. */
+        @media (max-width: 640px) {{
+            [data-testid="stSidebar"] {{
+                width: 85vw !important;
+                min-width: 0 !important;
+            }}
+            [data-testid="stSidebarCollapseButton"] {{
+                display: flex !important;
+            }}
+        }}
         </style>
         """,
         unsafe_allow_html=True,
