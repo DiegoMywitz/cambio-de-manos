@@ -7,6 +7,7 @@ import pandas as pd
 from database import (
     RUBROS, PROVINCIAS, CIUDADES_SUGERIDAS, init_db, crear_publicacion, listar_publicaciones,
     obtener_publicacion, crear_consulta, listar_consultas, marcar_consulta_respondida,
+    contar_consultas_por_publicacion,
     listar_publicaciones_de_usuario, activar_publicacion, cambiar_estado_publicacion,
     listar_vendidos_recientes, reporte_precios_por_rubro, listar_top_precios,
     publicacion_duplicada_reciente,
@@ -438,6 +439,7 @@ elif st.session_state.vista == "mis_publicaciones":
     if not propias:
         st.info("Todavía no publicaste ningún negocio.")
     else:
+        conteo_consultas = contar_consultas_por_publicacion([pub["id"] for pub in propias])
         for pub in propias:
             with st.container(border=True):
                 if pub.get("tier") == "destacado":
@@ -452,8 +454,7 @@ elif st.session_state.vista == "mis_publicaciones":
                 with c2:
                     st.metric("Precio", money(pub["precio_venta"]))
                 with c3:
-                    n_consultas = len(listar_consultas(pub["id"]))
-                    st.metric("Consultas", n_consultas)
+                    st.metric("Consultas", conteo_consultas.get(pub["id"], 0))
 
                 if pub["estado"] == "pendiente_pago" and payments.esta_configurado():
                     checkout_url = payments.crear_preferencia_publicacion(pub["id"], pub["titulo"], pub["tier"])

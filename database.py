@@ -4,6 +4,7 @@ import secrets
 
 import psycopg2
 import psycopg2.extras
+import psycopg2.pool
 import streamlit as st
 
 RUBROS = [
@@ -49,9 +50,29 @@ def _database_url() -> str:
     return url
 
 
+@st.cache_resource(show_spinner=False)
+def _get_pool():
+    """Pool de conexiones reutilizables, compartido entre todas las sesiones del
+    mismo proceso. Antes cada consulta abría y cerraba su propia conexión a
+    Supabase de cero (handshake + SSL + login), algo lento en un servidor con
+    poca CPU. cache_resource hace que el pool se cree una sola vez por proceso."""
+    return psycopg2.pool.ThreadedConnectionPool(
+        1, 10, _database_url(), cursor_factory=psycopg2.extras.RealDictCursor,
+    )
+
+
 def get_connection():
-    conn = psycopg2.connect(_database_url(), cursor_factory=psycopg2.extras.RealDictCursor)
-    return conn
+    return _get_pool().getconn()
+
+
+def release_connection(conn):
+    try:
+        _get_pool().putconn(conn)
+    except Exception:
+        try:
+            conn.close()
+        except Exception:
+            pass
 
 
 def init_db():
@@ -159,7 +180,7 @@ def init_db():
     )
     conn.commit()
     cur.close()
-    conn.close()
+    release_connection(conn)
 
 
 def _hash_password(password: str, salt: str = None) -> tuple:
@@ -183,7 +204,7 @@ def crear_usuario(nombre: str, email: str, password: str, telefono: str = None) 
         cur.close()
         return new_id
     finally:
-        conn.close()
+        release_connection(conn)
 
 
 def obtener_usuario_por_email(email: str):
@@ -192,7 +213,7 @@ def obtener_usuario_por_email(email: str):
     cur.execute("SELECT * FROM usuarios WHERE email = %s", (email.lower().strip(),))
     row = cur.fetchone()
     cur.close()
-    conn.close()
+    release_connection(conn)
     return row
 
 
@@ -202,7 +223,7 @@ def obtener_usuario(usuario_id: int):
     cur.execute("SELECT * FROM usuarios WHERE id = %s", (usuario_id,))
     row = cur.fetchone()
     cur.close()
-    conn.close()
+    release_connection(conn)
     return row
 
 
@@ -224,7 +245,7 @@ def crear_token_verificacion(usuario_id: int, horas_validez: int = 48) -> str:
     )
     conn.commit()
     cur.close()
-    conn.close()
+    release_connection(conn)
     return token
 
 
@@ -241,14 +262,14 @@ def verificar_email_con_token(token: str) -> bool:
     row = cur.fetchone()
     if row is None:
         cur.close()
-        conn.close()
+        release_connection(conn)
         return False
 
     cur.execute("UPDATE usuarios SET email_verificado = TRUE WHERE id = %s", (row["usuario_id"],))
     cur.execute("UPDATE verificaciones_email SET usado = TRUE WHERE token = %s", (token,))
     conn.commit()
     cur.close()
-    conn.close()
+    release_connection(conn)
     return True
 
 
@@ -265,7 +286,7 @@ def crear_token_reset(usuario_id: int, horas_validez: int = 1) -> str:
     )
     conn.commit()
     cur.close()
-    conn.close()
+    release_connection(conn)
     return token
 
 
@@ -282,7 +303,7 @@ def obtener_reset_valido(token: str):
     )
     row = cur.fetchone()
     cur.close()
-    conn.close()
+    release_connection(conn)
     return row
 
 
@@ -300,7 +321,7 @@ def actualizar_password_con_token(token: str, password_nueva: str) -> bool:
     cur.execute("UPDATE password_resets SET usado = TRUE WHERE token = %s", (token,))
     conn.commit()
     cur.close()
-    conn.close()
+    release_connection(conn)
     return True
 
 
@@ -321,7 +342,7 @@ def publicacion_duplicada_reciente(usuario_id: int, titulo: str, precio_venta, s
     )
     row = cur.fetchone()
     cur.close()
-    conn.close()
+    release_connection(conn)
     return row["id"] if row else None
 
 
@@ -345,7 +366,7 @@ def crear_publicacion(data: dict, estado: str = "activa", tier: str = "basico") 
     new_id = cur.fetchone()["id"]
     conn.commit()
     cur.close()
-    conn.close()
+    release_connection(conn)
     return new_id
 
 
@@ -355,7 +376,7 @@ def activar_publicacion(pub_id: int):
     cur.execute("UPDATE publicaciones SET estado = 'activa' WHERE id = %s", (pub_id,))
     conn.commit()
     cur.close()
-    conn.close()
+    release_connection(conn)
 
 
 def cambiar_estado_publicacion(pub_id: int, estado: str):
@@ -368,7 +389,7 @@ def cambiar_estado_publicacion(pub_id: int, estado: str):
         cur.execute("UPDATE publicaciones SET estado = %s WHERE id = %s", (estado, pub_id))
     conn.commit()
     cur.close()
-    conn.close()
+    release_connection(conn)
 
 
 def listar_vendidos_recientes(limite: int = 6):
@@ -387,7 +408,7 @@ def listar_vendidos_recientes(limite: int = 6):
     )
     rows = cur.fetchall()
     cur.close()
-    conn.close()
+    release_connection(conn)
     return rows
 
 
@@ -428,7 +449,7 @@ def listar_publicaciones(rubro=None, provincia=None, precio_max=None, texto=None
     cur.execute(query, params)
     rows = cur.fetchall()
     cur.close()
-    conn.close()
+    release_connection(conn)
     return rows
 
 
@@ -438,7 +459,7 @@ def obtener_publicacion(pub_id: int):
     cur.execute(_SELECT_PUB_CON_CONTACTO + " WHERE p.id = %s", (pub_id,))
     row = cur.fetchone()
     cur.close()
-    conn.close()
+    release_connection(conn)
     return row
 
 
@@ -451,7 +472,7 @@ def listar_publicaciones_de_usuario(usuario_id: int):
     )
     rows = cur.fetchall()
     cur.close()
-    conn.close()
+    release_connection(conn)
     return rows
 
 
@@ -467,7 +488,7 @@ def crear_consulta(data: dict):
     )
     conn.commit()
     cur.close()
-    conn.close()
+    release_connection(conn)
 
 
 def listar_consultas(pub_id: int):
@@ -486,8 +507,30 @@ def listar_consultas(pub_id: int):
     )
     rows = cur.fetchall()
     cur.close()
-    conn.close()
+    release_connection(conn)
     return rows
+
+
+def contar_consultas_por_publicacion(pub_ids: list):
+    """Devuelve {publicacion_id: cantidad_de_consultas} en una sola consulta,
+    en vez de una consulta por publicación."""
+    if not pub_ids:
+        return {}
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT publicacion_id, COUNT(*) AS cantidad
+        FROM consultas
+        WHERE publicacion_id = ANY(%s)
+        GROUP BY publicacion_id
+        """,
+        (pub_ids,),
+    )
+    rows = cur.fetchall()
+    cur.close()
+    release_connection(conn)
+    return {r["publicacion_id"]: r["cantidad"] for r in rows}
 
 
 def marcar_consulta_respondida(consulta_id: int):
@@ -496,7 +539,7 @@ def marcar_consulta_respondida(consulta_id: int):
     cur.execute("UPDATE consultas SET respondida = TRUE WHERE id = %s", (consulta_id,))
     conn.commit()
     cur.close()
-    conn.close()
+    release_connection(conn)
 
 
 def agregar_imagen(pub_id: int, url: str, orden: int = 0):
@@ -508,7 +551,7 @@ def agregar_imagen(pub_id: int, url: str, orden: int = 0):
     )
     conn.commit()
     cur.close()
-    conn.close()
+    release_connection(conn)
 
 
 def agregar_video(pub_id: int, url: str):
@@ -517,7 +560,7 @@ def agregar_video(pub_id: int, url: str):
     cur.execute("UPDATE publicaciones SET video_url = %s WHERE id = %s", (url, pub_id))
     conn.commit()
     cur.close()
-    conn.close()
+    release_connection(conn)
 
 
 def listar_imagenes(pub_id: int):
@@ -529,7 +572,7 @@ def listar_imagenes(pub_id: int):
     )
     rows = cur.fetchall()
     cur.close()
-    conn.close()
+    release_connection(conn)
     return rows
 
 
@@ -546,7 +589,7 @@ def crear_alerta(usuario_id: int, rubro=None, provincia=None, precio_max=None, t
     new_id = cur.fetchone()["id"]
     conn.commit()
     cur.close()
-    conn.close()
+    release_connection(conn)
     return new_id
 
 
@@ -559,7 +602,7 @@ def listar_alertas_de_usuario(usuario_id: int):
     )
     rows = cur.fetchall()
     cur.close()
-    conn.close()
+    release_connection(conn)
     return rows
 
 
@@ -572,7 +615,7 @@ def eliminar_alerta(alerta_id: int, usuario_id: int):
     )
     conn.commit()
     cur.close()
-    conn.close()
+    release_connection(conn)
 
 
 def listar_todas_las_alertas():
@@ -588,7 +631,7 @@ def listar_todas_las_alertas():
     )
     rows = cur.fetchall()
     cur.close()
-    conn.close()
+    release_connection(conn)
     return rows
 
 
@@ -616,7 +659,7 @@ def publicaciones_nuevas_para_alerta(alerta) -> list:
     cur.execute(query, params)
     rows = cur.fetchall()
     cur.close()
-    conn.close()
+    release_connection(conn)
     return rows
 
 
@@ -629,7 +672,7 @@ def actualizar_ultima_revision(alerta_id: int):
     )
     conn.commit()
     cur.close()
-    conn.close()
+    release_connection(conn)
 
 
 def es_favorito(usuario_id: int, pub_id: int) -> bool:
@@ -641,7 +684,7 @@ def es_favorito(usuario_id: int, pub_id: int) -> bool:
     )
     row = cur.fetchone()
     cur.close()
-    conn.close()
+    release_connection(conn)
     return row is not None
 
 
@@ -655,7 +698,7 @@ def agregar_favorito(usuario_id: int, pub_id: int):
     )
     conn.commit()
     cur.close()
-    conn.close()
+    release_connection(conn)
 
 
 def quitar_favorito(usuario_id: int, pub_id: int):
@@ -667,7 +710,7 @@ def quitar_favorito(usuario_id: int, pub_id: int):
     )
     conn.commit()
     cur.close()
-    conn.close()
+    release_connection(conn)
 
 
 def listar_favoritos_de_usuario(usuario_id: int):
@@ -683,7 +726,7 @@ def listar_favoritos_de_usuario(usuario_id: int):
     )
     rows = cur.fetchall()
     cur.close()
-    conn.close()
+    release_connection(conn)
     return rows
 
 
@@ -706,7 +749,7 @@ def reporte_precios_por_rubro():
     )
     rows = cur.fetchall()
     cur.close()
-    conn.close()
+    release_connection(conn)
     return rows
 
 
@@ -726,7 +769,7 @@ def listar_top_precios(limite: int = 10):
     )
     rows = cur.fetchall()
     cur.close()
-    conn.close()
+    release_connection(conn)
     return rows
 
 
@@ -747,5 +790,5 @@ def imagenes_portada(pub_ids: list):
     )
     rows = cur.fetchall()
     cur.close()
-    conn.close()
+    release_connection(conn)
     return {r["publicacion_id"]: r["url"] for r in rows}
