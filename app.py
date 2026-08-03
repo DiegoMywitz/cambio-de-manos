@@ -85,7 +85,7 @@ st.sidebar.button("◆ Franquicias", use_container_width=True,
                    on_click=ir_a, args=("franquicias",))
 st.sidebar.button("Cotizá tu negocio", use_container_width=True,
                    on_click=ir_a, args=("cotizar",))
-st.sidebar.button("Reporte de precios", use_container_width=True,
+st.sidebar.button("Ranking de precios", use_container_width=True,
                    on_click=ir_a, args=("reporte",))
 
 usuario = auth.usuario_actual()
@@ -521,7 +521,7 @@ elif st.session_state.vista == "cotizar":
 # ---------- Vista: reporte de precios ----------
 elif st.session_state.vista == "reporte":
     style.kicker("Reporte trimestral")
-    st.title("Reporte de precios de fondos de comercio en Argentina")
+    st.title("Ranking de precios de fondos de comercio en Argentina")
     st.caption(f"Actualizado al {date.today().strftime('%d/%m/%Y')} · Basado en las publicaciones activas y vendidas en Cambio de Manos.")
 
     st.info(
