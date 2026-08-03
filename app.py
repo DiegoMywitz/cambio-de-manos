@@ -24,7 +24,7 @@ import widgets
 
 st.set_page_config(page_title="Cambio de Manos",
                     page_icon=str(style.ASSETS_DIR / "favicon.png"), layout="wide",
-                    initial_sidebar_state="expanded")
+                    initial_sidebar_state="auto")
 style.inject()
 style.inject_pwa()
 init_db()
