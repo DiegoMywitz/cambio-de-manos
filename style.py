@@ -133,6 +133,22 @@ def inject():
             margin-bottom: -0.5rem;
         }}
 
+        .st-key-login_top_btn {{
+            display: flex;
+            justify-content: flex-end;
+        }}
+        .st-key-login_top_btn .stButton > button {{
+            font-size: 0.75rem;
+            padding: 0.15rem 0.7rem;
+            border-radius: 999px;
+            color: {SLATE};
+            border-color: {BORDER};
+        }}
+        .st-key-login_top_btn .stButton > button:hover {{
+            color: {ACCENT_BLUE};
+            border-color: {ACCENT_BLUE};
+        }}
+
         .st-key-logo_click_wrap {{
             position: relative;
         }}

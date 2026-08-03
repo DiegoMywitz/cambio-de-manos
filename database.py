@@ -675,6 +675,26 @@ def reporte_precios_por_rubro():
     return rows
 
 
+def listar_top_precios(limite: int = 10):
+    """Ranking de los negocios más caros publicados, para el reporte de precios."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT titulo, rubro, provincia, precio_venta
+        FROM publicaciones
+        WHERE estado IN ('activa', 'vendida') AND precio_venta IS NOT NULL
+        ORDER BY precio_venta DESC
+        LIMIT %s
+        """,
+        (limite,),
+    )
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows
+
+
 def imagenes_portada(pub_ids: list):
     """Devuelve un dict {publicacion_id: primera_url} para una lista de ids, en una sola consulta."""
     if not pub_ids:

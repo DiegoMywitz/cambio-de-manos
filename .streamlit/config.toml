@@ -3,3 +3,4 @@ toolbarMode = "minimal"
 
 [theme]
 base = "light"
+primaryColor = "#2d6cdf"

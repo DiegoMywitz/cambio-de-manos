@@ -8,7 +8,7 @@ from database import (
     RUBROS, PROVINCIAS, CIUDADES_SUGERIDAS, init_db, crear_publicacion, listar_publicaciones,
     obtener_publicacion, crear_consulta, listar_consultas, marcar_consulta_respondida,
     listar_publicaciones_de_usuario, activar_publicacion, cambiar_estado_publicacion,
-    listar_vendidos_recientes, reporte_precios_por_rubro,
+    listar_vendidos_recientes, reporte_precios_por_rubro, listar_top_precios,
     agregar_imagen, listar_imagenes, imagenes_portada,
     es_favorito, agregar_favorito, quitar_favorito, listar_favoritos_de_usuario,
     crear_alerta, listar_alertas_de_usuario, eliminar_alerta,
@@ -71,10 +71,8 @@ with barra_der:
             unsafe_allow_html=True,
         )
     else:
-        st.markdown(
-            "<div style='text-align:right; padding-top:0.5rem;'>No iniciaste sesión</div>",
-            unsafe_allow_html=True,
-        )
+        with st.container(key="login_top_btn"):
+            st.button("Iniciar sesión", on_click=ir_a, args=("acceso",))
 
 # ---------- Sidebar / navegación ----------
 style.sidebar_logo()
@@ -559,6 +557,15 @@ elif st.session_state.vista == "reporte":
         )
 
     st.divider()
+    st.subheader("🏆 Ranking: los negocios más caros publicados")
+    top = listar_top_precios(limite=10)
+    if top:
+        for i, t in enumerate(top, start=1):
+            st.markdown(f"**{i}. {cap(t['titulo'])}** — {t['rubro']}, {t['provincia']} — {money(t['precio_venta'])}")
+    else:
+        st.caption("Todavía no hay suficientes datos para armar el ranking.")
+
+    st.divider()
     st.button("Quiero saber cuánto vale mi negocio →", on_click=ir_a, args=("cotizar",), type="primary")
 
 # ---------- Vista: franquicias ----------
@@ -632,6 +639,13 @@ elif st.session_state.vista == "alertas":
                 if st.button("Eliminar alerta", key=f"del_alerta_{alerta['id']}"):
                     eliminar_alerta(alerta["id"], usuario["id"])
                     st.rerun()
+
+# ---------- Vista: acceso ----------
+elif st.session_state.vista == "acceso":
+    if auth.usuario_actual():
+        ir_a("buscar")
+        st.rerun()
+    auth.requerir_login()
 
 # ---------- Vista: buscar (default) ----------
 else:
