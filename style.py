@@ -55,6 +55,12 @@ def inject():
         [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {{
             color: #ffffff !important;
         }}
+        [data-testid="stSidebar"] .cdm-logo-word {{
+            color: {NAVY_DARK} !important;
+        }}
+        [data-testid="stSidebar"] .cdm-logo-tagline {{
+            color: {ICON_BLUE} !important;
+        }}
         [data-testid="stSidebar"] .stButton button {{
             background-color: transparent;
             color: #e8ebef;
