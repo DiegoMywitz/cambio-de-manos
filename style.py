@@ -200,7 +200,7 @@ def inject():
             line-height: 1.05;
             letter-spacing: 0.3px;
             color: {NAVY_DARK} !important;
-            text-shadow: 0 1px 0 rgba(255,255,255,0.7), 0 2px 3px rgba(15,38,71,0.2);
+            text-shadow: none !important;
         }}
         .cdm-logo-tagline {{
             font-family: 'Helvetica Neue', Arial, sans-serif;
