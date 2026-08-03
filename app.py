@@ -10,7 +10,7 @@ from database import (
     listar_publicaciones_de_usuario, activar_publicacion, cambiar_estado_publicacion,
     listar_vendidos_recientes, reporte_precios_por_rubro, listar_top_precios,
     publicacion_duplicada_reciente,
-    agregar_imagen, listar_imagenes, imagenes_portada,
+    agregar_imagen, listar_imagenes, imagenes_portada, agregar_video,
     es_favorito, agregar_favorito, quitar_favorito, listar_favoritos_de_usuario,
     crear_alerta, listar_alertas_de_usuario, eliminar_alerta,
 )
@@ -194,9 +194,24 @@ if st.session_state.vista == "publicar":
                                 key="pub_descripcion")
 
     fotos = None
+    video = None
     if images.esta_configurado():
-        fotos = st.file_uploader("Fotos del negocio (opcional, hasta 5)", type=["jpg", "jpeg", "png"],
-                                  accept_multiple_files=True, key="pub_fotos")
+        fotos = st.file_uploader(
+            "Fotos del negocio (opcional, hasta 5) — sugerimos empezar con una del frente del local",
+            type=["jpg", "jpeg", "png"], accept_multiple_files=True, key="pub_fotos",
+        )
+        if fotos:
+            fotos = fotos[:5]
+            cols_preview = st.columns(min(len(fotos), 5))
+            for col_p, foto_p in zip(cols_preview, fotos):
+                col_p.image(foto_p, use_container_width=True)
+
+        video = st.file_uploader(
+            "Video corto del negocio (opcional, hasta 60MB)",
+            type=["mp4", "mov", "webm"], key="pub_video",
+        )
+        if video:
+            st.video(video)
 
     tier = "basico"
     if payments.esta_configurado():
@@ -257,6 +272,10 @@ if st.session_state.vista == "publicar":
                     url = images.subir_imagen(pub_id, foto.getvalue(), foto.name)
                     agregar_imagen(pub_id, url, orden=i)
 
+            if video:
+                video_url = images.subir_video(pub_id, video.getvalue(), video.name)
+                agregar_video(pub_id, video_url)
+
             if estado_inicial == "pendiente_pago":
                 st.session_state.pub_pendiente_pago = pub_id
             else:
@@ -313,6 +332,9 @@ elif st.session_state.vista == "detalle" and st.session_state.pub_seleccionada:
             cols_img = st.columns(len(imagenes))
             for col_img, img in zip(cols_img, imagenes):
                 col_img.image(img["url"], use_container_width=True)
+
+        if pub.get("video_url"):
+            st.video(pub["video_url"])
 
         col1, col2, col3, col4 = st.columns(4)
         col1.metric("Precio de venta", money(pub["precio_venta"]))

@@ -3,6 +3,7 @@ toolbarMode = "minimal"
 
 [server]
 enableStaticServing = true
+maxUploadSize = 60
 
 [theme]
 base = "light"

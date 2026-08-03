@@ -100,12 +100,14 @@ def init_db():
             tier TEXT DEFAULT 'basico',
             es_franquicia BOOLEAN DEFAULT FALSE,
             fecha_venta TIMESTAMP,
+            video_url TEXT,
             fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
         ALTER TABLE publicaciones ADD COLUMN IF NOT EXISTS tier TEXT DEFAULT 'basico';
         ALTER TABLE publicaciones ADD COLUMN IF NOT EXISTS es_franquicia BOOLEAN DEFAULT FALSE;
         ALTER TABLE publicaciones ADD COLUMN IF NOT EXISTS fecha_venta TIMESTAMP;
+        ALTER TABLE publicaciones ADD COLUMN IF NOT EXISTS video_url TEXT;
 
         CREATE TABLE IF NOT EXISTS consultas (
             id SERIAL PRIMARY KEY,
@@ -504,6 +506,15 @@ def agregar_imagen(pub_id: int, url: str, orden: int = 0):
         "INSERT INTO imagenes_publicacion (publicacion_id, url, orden) VALUES (%s, %s, %s)",
         (pub_id, url, orden),
     )
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
+def agregar_video(pub_id: int, url: str):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("UPDATE publicaciones SET video_url = %s WHERE id = %s", (url, pub_id))
     conn.commit()
     cur.close()
     conn.close()
