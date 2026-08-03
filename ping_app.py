@@ -7,7 +7,7 @@ import sys
 
 import requests
 
-APP_URL = "https://cambio-de-manos.onrender.com/"
+APP_URL = "https://cambiodemanos.com.ar/"
 
 
 def main():
