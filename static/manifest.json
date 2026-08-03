@@ -1,0 +1,13 @@
+{
+  "name": "Cambio de Manos",
+  "short_name": "Cambio de Manos",
+  "description": "Compraventa de fondos de comercio y empresas en Argentina",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f8fa",
+  "theme_color": "#0f2647",
+  "icons": [
+    { "src": "/app/static/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/app/static/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

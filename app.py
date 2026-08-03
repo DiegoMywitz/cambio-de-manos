@@ -26,6 +26,7 @@ st.set_page_config(page_title="Cambio de Manos",
                     page_icon=str(style.ASSETS_DIR / "favicon.png"), layout="wide",
                     initial_sidebar_state="expanded")
 style.inject()
+style.inject_pwa()
 init_db()
 
 if "vista" not in st.session_state:

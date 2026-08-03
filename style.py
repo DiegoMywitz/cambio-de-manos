@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 NAVY = "#0f2647"
 NAVY_DARK = "#0a1b33"
@@ -251,6 +252,51 @@ def inject():
         </style>
         """,
         unsafe_allow_html=True,
+    )
+
+
+def inject_pwa():
+    """Agrega el manifest.json y los meta tags de PWA al <head> real de la página,
+    para que el celular ofrezca 'Agregar a la pantalla de inicio'. Streamlit no
+    da control directo sobre el <head>, así que se inyecta vía JS desde un
+    componente (su iframe es del mismo origen, por eso puede tocar el documento
+    padre)."""
+    components.html(
+        """
+        <script>
+        (function() {
+            const d = window.parent.document;
+            if (d.querySelector('link[rel="manifest"]')) { return; }
+
+            const manifest = d.createElement('link');
+            manifest.rel = 'manifest';
+            manifest.href = '/app/static/manifest.json';
+            d.head.appendChild(manifest);
+
+            const themeColor = d.createElement('meta');
+            themeColor.name = 'theme-color';
+            themeColor.content = '#0f2647';
+            d.head.appendChild(themeColor);
+
+            const appleIcon = d.createElement('link');
+            appleIcon.rel = 'apple-touch-icon';
+            appleIcon.href = '/app/static/icon-192.png';
+            d.head.appendChild(appleIcon);
+
+            const appleCapable = d.createElement('meta');
+            appleCapable.name = 'apple-mobile-web-app-capable';
+            appleCapable.content = 'yes';
+            d.head.appendChild(appleCapable);
+
+            const appleTitle = d.createElement('meta');
+            appleTitle.name = 'apple-mobile-web-app-title';
+            appleTitle.content = 'Cambio de Manos';
+            d.head.appendChild(appleTitle);
+        })();
+        </script>
+        """,
+        height=0,
+        width=0,
     )
 
 
