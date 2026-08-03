@@ -25,6 +25,31 @@ import valuation
 import widgets
 import georef
 
+VISTA_PARAMS = {
+    "publicar": "publicar",
+    "franquicias": "franquicias",
+    "cotizar": "cotizar",
+    "reporte": "ranking",
+    "detalle": "negocio",
+    "terminos": "terminos",
+    "privacidad": "privacidad",
+    "mis_publicaciones": "mis-publicaciones",
+    "favoritos": "favoritos",
+    "alertas": "alertas",
+    "acceso": "acceso",
+}
+PARAM_VISTAS = {param: vista for vista, param in VISTA_PARAMS.items()}
+
+TITULOS_VISTA = {
+    "buscar": "Cambio de Manos — Comprá y vendé fondos de comercio en Argentina",
+    "publicar": "Publicá tu negocio en venta — Cambio de Manos",
+    "franquicias": "Franquicias en venta — Cambio de Manos",
+    "cotizar": "Cotizá tu negocio — Cambio de Manos",
+    "reporte": "Ranking de precios de negocios — Cambio de Manos",
+    "terminos": "Términos y Condiciones — Cambio de Manos",
+    "privacidad": "Política de Privacidad — Cambio de Manos",
+}
+
 st.set_page_config(page_title="Cambio de Manos",
                     page_icon=str(style.ASSETS_DIR / "favicon.png"), layout="wide",
                     initial_sidebar_state="auto")
@@ -35,12 +60,22 @@ if not st.session_state.get("pwa_injected"):
 init_db()
 
 if "vista" not in st.session_state:
-    st.session_state.vista = "buscar"
+    _param_inicial = st.query_params.get("p")
+    st.session_state.vista = PARAM_VISTAS.get(_param_inicial, "buscar")
+    st.session_state.pub_seleccionada = None
+    if st.session_state.vista == "detalle":
+        _id_inicial = st.query_params.get("id", "")
+        if _id_inicial.isdigit():
+            st.session_state.pub_seleccionada = int(_id_inicial)
+        else:
+            st.session_state.vista = "buscar"
 if st.session_state.get("_ultima_vista") != st.session_state.vista:
     style.scroll_to_top()
     st.session_state._ultima_vista = st.session_state.vista
 if "pub_seleccionada" not in st.session_state:
     st.session_state.pub_seleccionada = None
+if st.session_state.vista != "detalle":
+    st.set_page_config(page_title=TITULOS_VISTA.get(st.session_state.vista, "Cambio de Manos"))
 if "usuario" not in st.session_state:
     st.session_state.usuario = None
 if "pub_pendiente_pago" not in st.session_state:
@@ -60,6 +95,12 @@ def money(v):
 def ir_a(vista, pub_id=None):
     st.session_state.vista = vista
     st.session_state.pub_seleccionada = pub_id
+    st.query_params.clear()
+    param = VISTA_PARAMS.get(vista)
+    if param:
+        st.query_params["p"] = param
+    if vista == "detalle" and pub_id:
+        st.query_params["id"] = str(pub_id)
 
 
 if "verify_token" in st.query_params:
@@ -84,7 +125,7 @@ with barra_der:
             st.button("Iniciar sesión", on_click=ir_a, args=("acceso",))
 
 # ---------- Sidebar / navegación ----------
-style.sidebar_logo()
+style.sidebar_logo(on_click=ir_a, args=("buscar",))
 st.sidebar.caption("Transferencia de fondos de comercio y empresas en Argentina.")
 st.sidebar.button("Buscar oportunidades", use_container_width=True,
                    on_click=ir_a, args=("buscar",))
@@ -321,6 +362,7 @@ elif st.session_state.vista == "detalle" and st.session_state.pub_seleccionada:
     if pub is None:
         st.warning("Esta publicación ya no existe.")
     else:
+        st.set_page_config(page_title=f"{cap(pub['titulo'])} — Cambio de Manos")
         st.button("‹ Volver a la búsqueda", on_click=ir_a, args=("buscar",))
         style.kicker(pub["rubro"])
         if pub.get("es_franquicia"):

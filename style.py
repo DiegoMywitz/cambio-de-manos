@@ -364,13 +364,11 @@ def main_logo():
     )
 
 
-def sidebar_logo():
+def sidebar_logo(on_click=None, args=None):
     with st.sidebar.container(key="logo_click_wrap"):
         st.markdown(
             f'<div class="cdm-logo-panel"><img src="data:image/svg+xml;base64,{_logo_base64()}" alt="Cambio de Manos"><div><div class="cdm-logo-word">CAMBIO<br>DE MANOS</div><div class="cdm-logo-tagline">COMPRAVENTA DE EMPRESAS</div></div></div>',
             unsafe_allow_html=True,
         )
-        if st.button("Ir al inicio", key="logo_home_btn", use_container_width=True):
-            st.session_state.vista = "buscar"
-            st.session_state.pub_seleccionada = None
-            st.rerun()
+        st.button("Ir al inicio", key="logo_home_btn", use_container_width=True,
+                   on_click=on_click, args=args or ())
