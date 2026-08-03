@@ -243,6 +243,7 @@ if st.session_state.vista == "publicar":
                 st.session_state.pub_pendiente_pago = pub_id
             else:
                 st.success(f"Publicación registrada con el identificador N.º {pub_id}.")
+                st.toast("¡Publicación enviada!", icon="✅")
 
             for k in ("pub_titulo", "pub_localidad_otra", "pub_motivo_venta", "pub_descripcion",
                       "_moneyraw_pub_precio_venta", "_moneyraw_pub_facturacion", "_moneyraw_pub_resultado",
@@ -341,9 +342,9 @@ elif st.session_state.vista == "detalle" and st.session_state.pub_seleccionada:
                                 c["email_interesado"], c["nombre_interesado"], pub["titulo"], usuario["nombre"],
                             )
                             if notificado:
-                                st.success("Marcada como respondida. Avisamos al interesado por email.")
+                                st.toast("Marcada como respondida. Avisamos al interesado por email.", icon="✅")
                             else:
-                                st.success("Marcada como respondida.")
+                                st.toast("Marcada como respondida.", icon="✅")
                             st.rerun()
         else:
             st.subheader("Manifestar interés")
@@ -374,6 +375,7 @@ elif st.session_state.vista == "detalle" and st.session_state.pub_seleccionada:
                         notificado = notifications.notificar_nueva_consulta(
                             pub["email_contacto"], pub["titulo"], usuario["nombre"], mensaje_i,
                         )
+                        st.toast("¡Tu consulta fue enviada!", icon="✅")
                         if notificado:
                             st.success("Consulta enviada. Avisamos al vendedor por email.")
                         else:
@@ -555,7 +557,7 @@ elif st.session_state.vista == "reporte":
             }
             for f in filas
         ])
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        st.table(df.set_index("Rubro"))
 
         st.caption(
             "Metodología: precio promedio y mediana de venta publicados por rubro, sobre publicaciones activas "
@@ -695,6 +697,7 @@ else:
                 precio_max=precio_max_f if precio_max_f > 0 else None,
                 texto=texto_f if texto_f else None,
             )
+            st.toast("Alerta guardada", icon="🔔")
             st.success("Alerta guardada. Te avisaremos por email cuando aparezcan negocios nuevos que coincidan.")
 
     publicaciones = listar_publicaciones(

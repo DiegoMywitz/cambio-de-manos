@@ -311,7 +311,13 @@ def scroll_to_top():
     entre pantallas (es todo la misma página), así que al cambiar de sección el
     navegador mantiene el scroll donde estaba."""
     components.html(
-        "<script>window.parent.scrollTo(0, 0);</script>",
+        """
+        <script>
+        window.parent.scrollTo(0, 0);
+        setTimeout(function() { window.parent.scrollTo(0, 0); }, 150);
+        setTimeout(function() { window.parent.scrollTo(0, 0); }, 500);
+        </script>
+        """,
         height=0,
         width=0,
     )
