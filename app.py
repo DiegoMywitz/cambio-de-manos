@@ -33,6 +33,9 @@ init_db()
 
 if "vista" not in st.session_state:
     st.session_state.vista = "buscar"
+if st.session_state.get("_ultima_vista") != st.session_state.vista:
+    style.scroll_to_top()
+    st.session_state._ultima_vista = st.session_state.vista
 if "pub_seleccionada" not in st.session_state:
     st.session_state.pub_seleccionada = None
 if "usuario" not in st.session_state:

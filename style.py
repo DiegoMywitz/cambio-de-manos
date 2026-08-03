@@ -306,6 +306,17 @@ def inject_pwa():
     )
 
 
+def scroll_to_top():
+    """Vuelve el scroll al principio de la página. Streamlit no navega de verdad
+    entre pantallas (es todo la misma página), así que al cambiar de sección el
+    navegador mantiene el scroll donde estaba."""
+    components.html(
+        "<script>window.parent.scrollTo(0, 0);</script>",
+        height=0,
+        width=0,
+    )
+
+
 def kicker(text: str):
     st.markdown(f'<div class="cdm-kicker">{text}</div>', unsafe_allow_html=True)
 
