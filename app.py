@@ -21,6 +21,7 @@ import images
 import legal
 import valuation
 import widgets
+import georef
 
 st.set_page_config(page_title="Cambio de Manos",
                     page_icon=str(style.ASSETS_DIR / "favicon.png"), layout="wide",
@@ -151,11 +152,16 @@ if st.session_state.vista == "publicar":
         titulo = st.text_input("Título del negocio *", placeholder="Ej: Local de panchos en Palermo", key="pub_titulo")
         rubro = st.selectbox("Rubro *", RUBROS, key="pub_rubro")
         provincia = st.selectbox("Provincia *", PROVINCIAS, key="pub_provincia")
+        if st.session_state.get("_pub_provincia_anterior") != provincia:
+            st.session_state.pop("pub_localidad_sel", None)
+            st.session_state._pub_provincia_anterior = provincia
+        localidades_prov = georef.localidades_de_provincia(provincia)
+        opciones_localidad = ["(elegir o escribir abajo)"] + localidades_prov + ["Otra (escribir)"]
         localidad_sel = st.selectbox(
-            "Localidad / barrio", ["(elegir o escribir abajo)"] + CIUDADES_SUGERIDAS + ["Otra (escribir)"],
+            "Localidad / barrio", opciones_localidad,
             help="Empezá a escribir para filtrar las opciones.", key="pub_localidad_sel",
         )
-        if localidad_sel == "Otra (escribir)":
+        if localidad_sel == "Otra (escribir)" or not localidades_prov:
             localidad = st.text_input("Escribí la localidad / barrio", key="pub_localidad_otra")
         elif localidad_sel == "(elegir o escribir abajo)":
             localidad = ""
