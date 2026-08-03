@@ -652,6 +652,29 @@ def listar_favoritos_de_usuario(usuario_id: int):
     return rows
 
 
+def reporte_precios_por_rubro():
+    """Estadísticas agregadas de precio por rubro, para el reporte de precios (contenido de SEO)."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT
+            rubro,
+            COUNT(*) AS cantidad,
+            AVG(precio_venta) AS precio_promedio,
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY precio_venta) AS precio_mediana
+        FROM publicaciones
+        WHERE estado IN ('activa', 'vendida') AND precio_venta IS NOT NULL
+        GROUP BY rubro
+        ORDER BY cantidad DESC
+        """
+    )
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows
+
+
 def imagenes_portada(pub_ids: list):
     """Devuelve un dict {publicacion_id: primera_url} para una lista de ids, en una sola consulta."""
     if not pub_ids:

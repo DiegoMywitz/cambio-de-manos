@@ -1,4 +1,5 @@
 import html
+from datetime import date
 
 import streamlit as st
 import pandas as pd
@@ -7,7 +8,7 @@ from database import (
     RUBROS, PROVINCIAS, CIUDADES_SUGERIDAS, init_db, crear_publicacion, listar_publicaciones,
     obtener_publicacion, crear_consulta, listar_consultas, marcar_consulta_respondida,
     listar_publicaciones_de_usuario, activar_publicacion, cambiar_estado_publicacion,
-    listar_vendidos_recientes,
+    listar_vendidos_recientes, reporte_precios_por_rubro,
     agregar_imagen, listar_imagenes, imagenes_portada,
     es_favorito, agregar_favorito, quitar_favorito, listar_favoritos_de_usuario,
     crear_alerta, listar_alertas_de_usuario, eliminar_alerta,
@@ -86,6 +87,8 @@ st.sidebar.button("◆ Franquicias", use_container_width=True,
                    on_click=ir_a, args=("franquicias",))
 st.sidebar.button("Cotizá tu negocio", use_container_width=True,
                    on_click=ir_a, args=("cotizar",))
+st.sidebar.button("Reporte de precios", use_container_width=True,
+                   on_click=ir_a, args=("reporte",))
 
 usuario = auth.usuario_actual()
 if usuario:
@@ -516,6 +519,47 @@ elif st.session_state.vista == "cotizar":
                 "deudas, y la negociación en sí."
             )
             st.button("Publicar este negocio con estos datos", on_click=ir_a, args=("publicar",))
+
+# ---------- Vista: reporte de precios ----------
+elif st.session_state.vista == "reporte":
+    style.kicker("Reporte trimestral")
+    st.title("Reporte de precios de fondos de comercio en Argentina")
+    st.caption(f"Actualizado al {date.today().strftime('%d/%m/%Y')} · Basado en las publicaciones activas y vendidas en Cambio de Manos.")
+
+    st.info(
+        "⚠️ Mientras la plataforma crece, esta base incluye publicaciones de ejemplo junto con negocios reales, "
+        "así que estos números son solo una referencia orientativa y van a volverse más precisos a medida que "
+        "se sumen más operaciones reales."
+    )
+
+    st.markdown(
+        "¿Cuánto vale un kiosco? ¿Y una peluquería, o una agencia de viajes? Estos son los precios de "
+        "publicación promedio por rubro en Cambio de Manos, para tener una primera referencia antes de "
+        "vender o comprar un negocio en Argentina."
+    )
+
+    filas = reporte_precios_por_rubro()
+    if not filas:
+        st.warning("Todavía no hay suficientes publicaciones con precio cargado para armar el reporte.")
+    else:
+        df = pd.DataFrame([
+            {
+                "Rubro": f["rubro"],
+                "Negocios publicados": f["cantidad"],
+                "Precio promedio": money(f["precio_promedio"]),
+                "Precio mediana": money(f["precio_mediana"]),
+            }
+            for f in filas
+        ])
+        st.dataframe(df, use_container_width=True, hide_index=True)
+
+        st.caption(
+            "Metodología: precio promedio y mediana de venta publicados por rubro, sobre publicaciones activas "
+            "o vendidas con precio cargado. No incluye datos confidenciales de la negociación final entre las partes."
+        )
+
+    st.divider()
+    st.button("Quiero saber cuánto vale mi negocio →", on_click=ir_a, args=("cotizar",), type="primary")
 
 # ---------- Vista: franquicias ----------
 elif st.session_state.vista == "franquicias":
