@@ -2,7 +2,8 @@
 Georef (Ministerio del Interior): https://apis.datos.gob.ar/georef
 
 No requiere clave. Se cachea por provincia para no golpear la API en cada
-rerun de Streamlit.
+rerun de Streamlit. Los fallos NO se cachean (para poder reintentar en la
+próxima llamada en vez de quedar vacío por 24hs).
 """
 
 import requests
@@ -16,18 +17,24 @@ _NOMBRE_GEOREF = {
 
 
 @st.cache_data(ttl=86400, show_spinner=False)
+def _consultar_georef(nombre_georef: str) -> list:
+    """Puede lanzar una excepción; st.cache_data no cachea en ese caso."""
+    r = requests.get(
+        "https://apis.datos.gob.ar/georef/api/localidades",
+        params={"provincia": nombre_georef, "campos": "nombre", "max": 5000},
+        timeout=15,
+    )
+    r.raise_for_status()
+    data = r.json()
+    nombres = [loc["nombre"] for loc in data.get("localidades", [])]
+    return sorted(set(nombres))
+
+
 def localidades_de_provincia(provincia: str) -> list:
     """Devuelve la lista ordenada de localidades de una provincia. Lista vacía si falla."""
     nombre_georef = _NOMBRE_GEOREF.get(provincia, provincia)
     try:
-        r = requests.get(
-            "https://apis.datos.gob.ar/georef/api/localidades",
-            params={"provincia": nombre_georef, "campos": "nombre", "max": 5000},
-            timeout=8,
-        )
-        r.raise_for_status()
-        data = r.json()
-        nombres = [loc["nombre"] for loc in data.get("localidades", [])]
-        return sorted(set(nombres))
-    except Exception:
+        return _consultar_georef(nombre_georef)
+    except Exception as e:
+        print(f"georef: fallo al consultar localidades de '{nombre_georef}': {e}")
         return []
