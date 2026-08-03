@@ -34,7 +34,9 @@ def localidades_de_provincia(provincia: str) -> list:
     """Devuelve la lista ordenada de localidades de una provincia. Lista vacía si falla."""
     nombre_georef = _NOMBRE_GEOREF.get(provincia, provincia)
     try:
-        return _consultar_georef(nombre_georef)
+        resultado = _consultar_georef(nombre_georef)
+        print(f"georef: OK, {len(resultado)} localidades para '{nombre_georef}'")
+        return resultado
     except Exception as e:
-        print(f"georef: fallo al consultar localidades de '{nombre_georef}': {e}")
+        print(f"georef: fallo al consultar localidades de '{nombre_georef}': {type(e).__name__}: {e}")
         return []
