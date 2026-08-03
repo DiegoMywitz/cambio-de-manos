@@ -153,7 +153,7 @@ if st.session_state.vista == "publicar":
         rubro = st.selectbox("Rubro *", RUBROS, key="pub_rubro")
         provincia = st.selectbox("Provincia *", PROVINCIAS, key="pub_provincia")
         if st.session_state.get("_pub_provincia_anterior") != provincia:
-            st.session_state.pop("pub_localidad_sel", None)
+            st.session_state.pub_localidad_sel = "(elegir o escribir abajo)"
             st.session_state._pub_provincia_anterior = provincia
         localidades_prov = georef.localidades_de_provincia(provincia)
         opciones_localidad = ["(elegir o escribir abajo)"] + localidades_prov + ["Otra (escribir)"]
@@ -673,12 +673,18 @@ else:
         items = [f"{cap(v['titulo'])} ({v['provincia']})" for v in vendidos]
         st.success("✅ Vendidos recientemente: " + " · ".join(items))
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
         rubro_f = st.selectbox("Rubro", ["Todos"] + RUBROS)
     with col2:
         provincia_f = st.selectbox("Provincia", ["Todas"] + PROVINCIAS)
+        if st.session_state.get("_provincia_buscar_anterior") != provincia_f:
+            st.session_state.localidad_buscar_sel = "Todas"
+            st.session_state._provincia_buscar_anterior = provincia_f
     with col3:
+        localidades_f = georef.localidades_de_provincia(provincia_f) if provincia_f != "Todas" else []
+        localidad_f = st.selectbox("Localidad", ["Todas"] + localidades_f, key="localidad_buscar_sel")
+    with col4:
         precio_max_f = widgets.money_input("Precio máximo (ARS)", key="precio_max_buscar")
 
     def _set_sugerencia(valor):
@@ -707,7 +713,7 @@ else:
             st.success("Alerta guardada. Te avisaremos por email cuando aparezcan negocios nuevos que coincidan.")
 
     publicaciones = listar_publicaciones(
-        rubro=rubro_f, provincia=provincia_f,
+        rubro=rubro_f, provincia=provincia_f, localidad=localidad_f,
         precio_max=precio_max_f if precio_max_f > 0 else None,
         texto=texto_f if texto_f else None,
     )

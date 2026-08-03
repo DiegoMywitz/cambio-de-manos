@@ -376,7 +376,7 @@ _SELECT_PUB_CON_CONTACTO = """
 """
 
 
-def listar_publicaciones(rubro=None, provincia=None, precio_max=None, texto=None, solo_franquicias=False):
+def listar_publicaciones(rubro=None, provincia=None, precio_max=None, texto=None, solo_franquicias=False, localidad=None):
     conn = get_connection()
     cur = conn.cursor()
     query = _SELECT_PUB_CON_CONTACTO + " WHERE p.estado = 'activa'"
@@ -388,6 +388,9 @@ def listar_publicaciones(rubro=None, provincia=None, precio_max=None, texto=None
     if provincia and provincia != "Todas":
         query += " AND p.provincia = %s"
         params.append(provincia)
+    if localidad and localidad != "Todas":
+        query += " AND p.localidad ILIKE %s"
+        params.append(f"%{localidad}%")
     if precio_max:
         query += " AND (p.precio_venta IS NULL OR p.precio_venta <= %s)"
         params.append(precio_max)
