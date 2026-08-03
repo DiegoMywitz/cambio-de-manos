@@ -118,6 +118,11 @@ if usuario:
     st.sidebar.caption(f"Sesión iniciada como **{usuario['nombre']}**")
     if notifications.esta_configurado() and not usuario.get("email_verificado"):
         st.sidebar.caption("⚠️ Todavía no confirmaste tu email. Revisá tu bandeja de entrada.")
+        if st.sidebar.button("Reenviar email de confirmación", use_container_width=True):
+            if auth.reenviar_verificacion(usuario):
+                st.sidebar.success("Te reenviamos el email. Revisá también la carpeta de spam.")
+            else:
+                st.sidebar.error("No pudimos reenviar el email ahora. Probá de nuevo en un rato.")
     st.sidebar.button("Cerrar sesión", use_container_width=True,
                        on_click=lambda: (auth.cerrar_sesion(), ir_a("buscar")))
 else:

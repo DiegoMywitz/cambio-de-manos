@@ -19,6 +19,15 @@ def usuario_actual():
     return st.session_state.get("usuario")
 
 
+def reenviar_verificacion(usuario) -> bool:
+    """Genera un nuevo link de verificación y lo reenvía. Devuelve True si se pudo enviar."""
+    if not notifications.esta_configurado():
+        return False
+    token = crear_token_verificacion(usuario["id"])
+    link = f"{APP_URL}?verify_token={token}"
+    return notifications.notificar_verificacion_email(usuario["email"], usuario["nombre"], link)
+
+
 def cerrar_sesion():
     st.session_state.usuario = None
 
