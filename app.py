@@ -9,6 +9,7 @@ from database import (
     obtener_publicacion, crear_consulta, listar_consultas, marcar_consulta_respondida,
     listar_publicaciones_de_usuario, activar_publicacion, cambiar_estado_publicacion,
     listar_vendidos_recientes, reporte_precios_por_rubro, listar_top_precios,
+    publicacion_duplicada_reciente,
     agregar_imagen, listar_imagenes, imagenes_portada,
     es_favorito, agregar_favorito, quitar_favorito, listar_favoritos_de_usuario,
     crear_alerta, listar_alertas_de_usuario, eliminar_alerta,
@@ -227,9 +228,15 @@ if st.session_state.vista == "publicar":
         if faltantes:
             st.error("Faltan completar: " + ", ".join(faltantes))
         else:
+            usuario_id_actual = auth.usuario_actual()["id"]
+            pub_existente = publicacion_duplicada_reciente(usuario_id_actual, titulo, precio_venta)
+            if pub_existente:
+                st.warning("Esta publicación ya se cargó hace un momento (evitamos duplicarla).")
+                st.toast("Ya estaba publicada, no se duplicó", icon="ℹ️")
+                st.stop()
             estado_inicial = "pendiente_pago" if payments.esta_configurado() else "activa"
             pub_id = crear_publicacion({
-                "usuario_id": auth.usuario_actual()["id"],
+                "usuario_id": usuario_id_actual,
                 "titulo": titulo,
                 "rubro": rubro,
                 "provincia": provincia,
@@ -281,7 +288,12 @@ if st.session_state.vista == "publicar":
                         st.success("Pago confirmado. Tu publicación ya está activa.")
                         st.rerun()
                     else:
-                        st.warning("Todavía no encontramos el pago acreditado. Probá de nuevo en unos minutos.")
+                        st.warning(
+                            "Todavía no encontramos el pago acreditado. Puede tardar unos minutos — probá de "
+                            "nuevo, o si ya pagaste y no se refleja, mandanos el comprobante a "
+                            "**cambiodefirma.contacto@gmail.com** con el N.º de publicación "
+                            f"**{pub_p['id']}** y lo activamos manualmente en menos de 48hs."
+                        )
 
 # ---------- Vista: detalle ----------
 elif st.session_state.vista == "detalle" and st.session_state.pub_seleccionada:
@@ -433,7 +445,11 @@ elif st.session_state.vista == "mis_publicaciones":
                                 st.success("Pago confirmado. Publicación activada.")
                                 st.rerun()
                             else:
-                                st.warning("Todavía no encontramos el pago acreditado.")
+                                st.warning(
+                                    "Todavía no encontramos el pago acreditado. Si ya pagaste y no se refleja, "
+                                    "mandanos el comprobante a **cambiodefirma.contacto@gmail.com** con el N.º "
+                                    f"de publicación **{pub['id']}** y lo activamos manualmente en menos de 48hs."
+                                )
                 else:
                     cb1, cb2, cb3 = st.columns(3)
                     with cb1:

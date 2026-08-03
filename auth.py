@@ -53,6 +53,7 @@ def _form_olvide_password():
         enviar = st.form_submit_button("Enviar link de recuperación", use_container_width=True)
 
         if enviar:
+            st.session_state.mostrar_olvide_pass = True
             usuario = obtener_usuario_por_email(email)
             if usuario is not None:
                 token = crear_token_reset(usuario["id"])
@@ -186,7 +187,7 @@ def requerir_login():
     tab_login, tab_registro = st.tabs(["Ya tengo cuenta", "Crear cuenta"])
     with tab_login:
         _form_login()
-        with st.expander("¿Olvidaste tu contraseña?"):
+        with st.expander("¿Olvidaste tu contraseña?", expanded=st.session_state.get("mostrar_olvide_pass", False)):
             _form_olvide_password()
     with tab_registro:
         _form_registro()

@@ -302,6 +302,27 @@ def actualizar_password_con_token(token: str, password_nueva: str) -> bool:
     return True
 
 
+def publicacion_duplicada_reciente(usuario_id: int, titulo: str, precio_venta, segundos: int = 120):
+    """Evita altas duplicadas si se toca el botón de publicar varias veces seguidas
+    (por ejemplo, porque la carga tarda y el usuario reintenta)."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT id FROM publicaciones
+        WHERE usuario_id = %s AND titulo = %s AND precio_venta = %s
+          AND fecha_creacion > NOW() - %s * INTERVAL '1 second'
+        ORDER BY fecha_creacion DESC
+        LIMIT 1
+        """,
+        (usuario_id, titulo, precio_venta, segundos),
+    )
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+    return row["id"] if row else None
+
+
 def crear_publicacion(data: dict, estado: str = "activa", tier: str = "basico") -> int:
     conn = get_connection()
     cur = conn.cursor()
