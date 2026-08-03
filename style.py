@@ -298,6 +298,16 @@ def inject_pwa():
             appleTitle.name = 'apple-mobile-web-app-title';
             appleTitle.content = 'Cambio de Manos';
             d.head.appendChild(appleTitle);
+
+            // El sitio ya está en español: le pedimos a Chrome que nunca
+            // ofrezca traducirlo (la traducción automática rompe el estilo
+            // del logo y de otros textos con formato).
+            const noTranslate = d.createElement('meta');
+            noTranslate.name = 'google';
+            noTranslate.content = 'notranslate';
+            d.head.appendChild(noTranslate);
+            d.documentElement.setAttribute('translate', 'no');
+            d.documentElement.classList.add('notranslate');
         })();
         </script>
         """,
