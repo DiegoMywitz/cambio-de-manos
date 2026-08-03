@@ -9,9 +9,10 @@ from database import (
 )
 import notifications
 import legal
+import payments
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-APP_URL = "https://cambiodemanos.streamlit.app/"
+APP_URL = payments.APP_BASE_URL
 
 
 def usuario_actual():
