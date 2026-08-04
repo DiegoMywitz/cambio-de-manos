@@ -55,18 +55,30 @@ def _form_olvide_password():
         if enviar:
             st.session_state.mostrar_olvide_pass = True
             usuario = obtener_usuario_por_email(email)
+            envio_fallo = False
             if usuario is not None:
                 token = crear_token_reset(usuario["id"])
                 link = f"{APP_URL}?reset_token={token}"
                 if notifications.esta_configurado():
-                    notifications.notificar_reset_password(usuario["email"], usuario["nombre"], link)
+                    envio_fallo = not notifications.notificar_reset_password(
+                        usuario["email"], usuario["nombre"], link
+                    )
                 else:
                     st.info(f"Notificaciones por email no configuradas. Link de prueba: {link}")
-            # Mismo mensaje exista o no la cuenta, para no revelar qué emails están registrados.
-            st.success(
-                "Si el email está registrado, te enviamos un link para elegir una nueva contraseña. "
-                "Revisá tu bandeja de entrada (y spam)."
-            )
+            if envio_fallo:
+                # Acá sí distinguimos del caso "el email no existe": si la cuenta existe
+                # pero el envío falló (problema de SMTP, etc.), decirle "éxito" igual
+                # dejaba al usuario sin ninguna forma de recuperar la contraseña.
+                st.error(
+                    "Encontramos tu cuenta pero no pudimos enviarte el email ahora mismo. "
+                    "Escribinos a **cambiodefirma.contacto@gmail.com** y te ayudamos a recuperar el acceso."
+                )
+            else:
+                # Mismo mensaje exista o no la cuenta, para no revelar qué emails están registrados.
+                st.success(
+                    "Si el email está registrado, te enviamos un link para elegir una nueva contraseña. "
+                    "Revisá tu bandeja de entrada (y spam)."
+                )
 
 
 def _form_nueva_password(token: str):

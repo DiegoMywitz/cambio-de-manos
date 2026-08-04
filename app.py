@@ -69,6 +69,13 @@ if "vista" not in st.session_state:
             st.session_state.pub_seleccionada = int(_id_inicial)
         else:
             st.session_state.vista = "buscar"
+    if st.session_state.vista == "publicar":
+        # Mercado Pago vuelve acá después del checkout (back_urls en payments.py) — el
+        # pago_id en la URL sobrevive aunque la sesión de Streamlit se haya perdido en
+        # el ida y vuelta, a diferencia de session_state solo.
+        _pago_id_inicial = st.query_params.get("pago_id", "")
+        if _pago_id_inicial.isdigit():
+            st.session_state.pub_pendiente_pago = int(_pago_id_inicial)
 if st.session_state.get("_ultima_vista") != st.session_state.vista:
     style.scroll_to_top()
     st.session_state._ultima_vista = st.session_state.vista

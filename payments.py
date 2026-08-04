@@ -44,9 +44,9 @@ def crear_preferencia_publicacion(pub_id: int, titulo: str, tier: str = "basico"
         ],
         "external_reference": str(pub_id),
         "back_urls": {
-            "success": APP_BASE_URL,
-            "pending": APP_BASE_URL,
-            "failure": APP_BASE_URL,
+            "success": f"{APP_BASE_URL.rstrip('/')}/?p=publicar&pago_id={pub_id}",
+            "pending": f"{APP_BASE_URL.rstrip('/')}/?p=publicar&pago_id={pub_id}",
+            "failure": f"{APP_BASE_URL.rstrip('/')}/?p=publicar&pago_id={pub_id}",
         },
     }
     result = sdk.preference().create(preference_data)

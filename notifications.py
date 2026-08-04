@@ -45,7 +45,11 @@ def enviar_email(destinatario: str, asunto: str, cuerpo: str) -> bool:
             server.login(SMTP_USER, SMTP_PASSWORD)
             server.send_message(msg)
         return True
-    except Exception:
+    except Exception as e:
+        # No relanzamos (una falla de notificación no debe romper el flujo de la app),
+        # pero sí lo logueamos: antes fallaba en silencio total y no había forma de
+        # diagnosticar por qué a un usuario nunca le llegaba un email.
+        print(f"[notifications] Falló el envío a {destinatario!r} ({asunto!r}): {e!r}")
         return False
 
 
