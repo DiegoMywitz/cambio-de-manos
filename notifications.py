@@ -1,9 +1,31 @@
+import contextlib
 import os
 import smtplib
+import socket
 import ssl
 from email.message import EmailMessage
 
 import streamlit as st
+
+
+@contextlib.contextmanager
+def _forzar_ipv4():
+    """Fuerza resolución DNS a IPv4 para la conexión SMTP.
+
+    Render (y otros hosts en contenedores) a veces resuelven smtp.gmail.com a una
+    dirección IPv6 sin salida funcional en el contenedor, lo que produce
+    OSError(101, 'Network is unreachable') aunque las credenciales sean correctas.
+    """
+    original = socket.getaddrinfo
+
+    def _solo_ipv4(host, port, family=0, type=0, proto=0, flags=0):
+        return original(host, port, socket.AF_INET, type, proto, flags)
+
+    socket.getaddrinfo = _solo_ipv4
+    try:
+        yield
+    finally:
+        socket.getaddrinfo = original
 
 
 def _config(key: str, default=None):
@@ -40,10 +62,11 @@ def enviar_email(destinatario: str, asunto: str, cuerpo: str) -> bool:
 
     try:
         context = ssl.create_default_context()
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as server:
-            server.starttls(context=context)
-            server.login(SMTP_USER, SMTP_PASSWORD)
-            server.send_message(msg)
+        with _forzar_ipv4():
+            with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as server:
+                server.starttls(context=context)
+                server.login(SMTP_USER, SMTP_PASSWORD)
+                server.send_message(msg)
         return True
     except Exception as e:
         # No relanzamos (una falla de notificación no debe romper el flujo de la app),
