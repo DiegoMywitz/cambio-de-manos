@@ -319,14 +319,41 @@ if st.session_state.vista == "publicar" and not pub_pendiente:
                 "es_franquicia": es_franquicia,
             }, estado=estado_inicial, tier=tier)
 
+            # La publicación (pub_id) ya está guardada en este punto — si falla la subida
+            # de una foto o el video, no hay que perderla ni tirar un error sin control:
+            # se avisa y se sigue, el usuario puede reintentar las fotos/video después.
+            fotos_con_error = 0
             if fotos:
-                for i, foto in enumerate(fotos[:5]):
-                    url = images.subir_imagen(pub_id, foto.getvalue(), foto.name)
-                    agregar_imagen(pub_id, url, orden=i)
+                with st.spinner(f"Subiendo {len(fotos[:5])} foto(s)..."):
+                    for i, foto in enumerate(fotos[:5]):
+                        try:
+                            url = images.subir_imagen(pub_id, foto.getvalue(), foto.name)
+                            agregar_imagen(pub_id, url, orden=i)
+                        except Exception as e:
+                            fotos_con_error += 1
+                            print(f"[publicar] Falló la subida de foto para pub {pub_id}: {e!r}")
 
+            video_con_error = False
             if video:
-                video_url = images.subir_video(pub_id, video.getvalue(), video.name)
-                agregar_video(pub_id, video_url)
+                with st.spinner("Subiendo video..."):
+                    try:
+                        video_url = images.subir_video(pub_id, video.getvalue(), video.name)
+                        agregar_video(pub_id, video_url)
+                    except Exception as e:
+                        video_con_error = True
+                        print(f"[publicar] Falló la subida de video para pub {pub_id}: {e!r}")
+
+            if fotos_con_error or video_con_error:
+                detalle = []
+                if fotos_con_error:
+                    detalle.append(f"{fotos_con_error} foto(s)")
+                if video_con_error:
+                    detalle.append("el video")
+                st.warning(
+                    "La publicación se guardó bien, pero no pudimos subir " + " y ".join(detalle) + ". "
+                    "Escribinos a **cambiodefirma.contacto@gmail.com** con el N.º de publicación "
+                    f"**{pub_id}** y te ayudamos a agregarlas."
+                )
 
             if estado_inicial == "pendiente_pago":
                 st.session_state.pub_pendiente_pago = pub_id
