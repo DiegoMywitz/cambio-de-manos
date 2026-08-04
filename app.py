@@ -194,6 +194,9 @@ leg2.button("Privacidad", use_container_width=True, on_click=ir_a, args=("privac
 if st.session_state.vista == "publicar":
     auth.requerir_login()
 
+    pub_pendiente = st.session_state.get("pub_pendiente_pago")
+
+if st.session_state.vista == "publicar" and not pub_pendiente:
     style.kicker("Alta de publicación")
     st.title("Publicar un negocio en venta")
     st.caption("Cargue los datos básicos de la operación. La información confidencial se comparte "
@@ -337,13 +340,18 @@ if st.session_state.vista == "publicar":
                 st.session_state.pop(k, None)
             st.rerun()
 
-    pub_pendiente = st.session_state.get("pub_pendiente_pago")
-    if pub_pendiente:
+if st.session_state.vista == "publicar" and pub_pendiente:
         pub_p = obtener_publicacion(pub_pendiente)
         if pub_p and pub_p["estado"] == "pendiente_pago":
-            st.divider()
-            st.subheader("Falta confirmar el pago")
-            st.caption("Tu publicación quedó guardada, pero no es visible en la búsqueda hasta que se acredite el pago.")
+            style.kicker("Alta de publicación")
+            st.title("Falta confirmar el pago")
+            etiqueta_tier = "Destacado" if pub_p["tier"] == "destacado" else "Básico"
+            precio_tier = payments.PRECIOS_POR_TIER.get(pub_p["tier"], payments.PRECIO_PUBLICACION)
+            st.caption(
+                f"Tu publicación **\"{cap(pub_p['titulo'])}\"** quedó guardada como nivel **{etiqueta_tier}** "
+                f"(${precio_tier:,.0f} ARS)".replace(",", ".") +
+                ", pero no es visible en la búsqueda hasta que se acredite el pago."
+            )
             checkout_url = payments.crear_preferencia_publicacion(pub_p["id"], pub_p["titulo"], pub_p["tier"])
             col_pago1, col_pago2 = st.columns(2)
             with col_pago1:
@@ -362,6 +370,11 @@ if st.session_state.vista == "publicar":
                             "**cambiodefirma.contacto@gmail.com** con el N.º de publicación "
                             f"**{pub_p['id']}** y lo activamos manualmente en menos de 48hs."
                         )
+            st.divider()
+            if st.button("Publicar otro negocio en vez de este"):
+                st.session_state.pub_pendiente_pago = None
+                st.query_params.clear()
+                st.rerun()
 
 # ---------- Vista: detalle ----------
 elif st.session_state.vista == "detalle" and st.session_state.pub_seleccionada:
