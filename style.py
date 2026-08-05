@@ -178,25 +178,25 @@ def inject():
             align-items: center;
             gap: 1rem;
             background-color: {BG};
+            background-image:
+                radial-gradient(circle at 88% 15%, rgba(15,38,71,0.07) 0%, transparent 45%),
+                repeating-linear-gradient(135deg, rgba(15,38,71,0.05) 0px, rgba(15,38,71,0.05) 1px, transparent 1px, transparent 10px);
             border-radius: 4px;
-            padding: 1.1rem 1.2rem;
+            padding: 1.3rem 1.2rem;
             margin-bottom: 1rem;
             cursor: pointer;
-        }}
-        .cdm-logo-panel.cdm-logo-panel--static {{
-            cursor: default;
-            padding: 0.5rem 0 1.3rem 0;
-            background-color: transparent;
+            position: relative;
+            overflow: hidden;
         }}
         .cdm-logo-panel img {{
-            width: 62px;
-            height: 62px;
+            width: 72px;
+            height: 72px;
             flex-shrink: 0;
         }}
         .cdm-logo-word {{
             font-family: 'Helvetica Neue', Arial, sans-serif;
             font-weight: 700;
-            font-size: 1.35rem;
+            font-size: 1.5rem;
             line-height: 1.08;
             letter-spacing: 0.3px;
             color: {NAVY_DARK} !important;
@@ -204,10 +204,30 @@ def inject():
         }}
         .cdm-logo-tagline {{
             font-family: 'Helvetica Neue', Arial, sans-serif;
-            font-size: 0.68rem;
+            font-size: 0.7rem;
             letter-spacing: 1.3px;
             color: {ICON_BLUE} !important;
             margin-top: 0.2rem;
+        }}
+
+        /* El logo de la portada (estático, arriba de la búsqueda) queda chico
+           como estaba antes — el agrandado es solo el del sidebar. */
+        .cdm-logo-panel.cdm-logo-panel--static {{
+            cursor: default;
+            padding: 0.4rem 0 1.1rem 0;
+            background-color: transparent;
+            background-image: none;
+        }}
+        .cdm-logo-panel--static img {{
+            width: 44px;
+            height: 44px;
+        }}
+        .cdm-logo-panel--static .cdm-logo-word {{
+            font-size: 1.05rem;
+        }}
+        .cdm-logo-panel--static .cdm-logo-tagline {{
+            font-size: 0.56rem;
+            margin-top: 0.15rem;
         }}
 
         .cdm-badge-destacado {{
