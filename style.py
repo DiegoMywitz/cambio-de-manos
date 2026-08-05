@@ -273,7 +273,7 @@ def inject():
             height: 2.1rem;
             border-radius: 50%;
             background-color: {NAVY};
-            border: 1px solid {GOLD};
+            border: 1px solid {ICON_BLUE};
             display: flex;
             align-items: center;
             justify-content: center;
@@ -281,7 +281,7 @@ def inject():
         .cdm-como-funciona-icono svg {{
             width: 1.05rem;
             height: 1.05rem;
-            stroke: {GOLD};
+            stroke: {ICON_BLUE};
         }}
         .cdm-como-funciona-texto {{
             font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -354,13 +354,18 @@ def inject_pwa():
 def scroll_to_top():
     """Vuelve el scroll al principio de la página. Streamlit no navega de verdad
     entre pantallas (es todo la misma página), así que al cambiar de sección el
-    navegador mantiene el scroll donde estaba."""
+    navegador mantiene el scroll donde estaba. Reintenta durante varios segundos
+    porque en vistas con formularios (ej. la ficha de un negocio sin sesión
+    iniciada, que muestra el formulario de login debajo) el navegador puede
+    autoenfocar un campo y volver a arrastrar el scroll hacia abajo después de
+    la primera corrección."""
     components.html(
         """
         <script>
-        window.parent.scrollTo(0, 0);
-        setTimeout(function() { window.parent.scrollTo(0, 0); }, 150);
-        setTimeout(function() { window.parent.scrollTo(0, 0); }, 500);
+        var _intentos = [0, 100, 250, 500, 900, 1400, 2000, 2800];
+        _intentos.forEach(function(ms) {
+            setTimeout(function() { window.parent.scrollTo(0, 0); }, ms);
+        });
         </script>
         """,
         height=0,
