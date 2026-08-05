@@ -23,7 +23,24 @@ con un email real y una contraseña. Sos responsable de mantener la
 confidencialidad de tu contraseña y de toda actividad que ocurra desde tu
 cuenta.
 
-**3. Contenido publicado**
+**3. Edad y capacidad para contratar**
+
+El Sitio está dirigido a personas mayores de 18 años con capacidad legal
+para contratar. Al registrarte, declarás cumplir con este requisito.
+
+**4. Uso aceptable de la plataforma**
+
+Al usar el Sitio, te comprometés a no: (a) publicar o transmitir contenido
+ilegal, difamatorio, discriminatorio o que viole derechos de terceros; (b)
+suplantar la identidad de otra persona o usar la cuenta de otro usuario; (c)
+enviar spam, virus o cualquier código malicioso; (d) extraer masivamente
+(scraping) el contenido o la base de datos del Sitio para armar listados o
+bases propias; ni (e) intentar vulnerar, sobrecargar o interferir con el
+funcionamiento normal del Sitio o su seguridad informática. El incumplimiento
+de este punto habilita a Cambio de Manos a suspender o eliminar la cuenta
+involucrada, sin perjuicio de otras acciones que pudieran corresponder.
+
+**5. Contenido publicado**
 
 Al publicar un negocio, declarás que los datos cargados (precio, facturación,
 ganancia, antigüedad, fotos, descripción, etc.) son reales y que tenés
@@ -31,23 +48,36 @@ derecho a ofrecer ese negocio en venta. Cambio de Manos puede remover
 cualquier publicación que considere falsa, engañosa, o que infrinja estos
 términos, sin necesidad de aviso previo.
 
-**4. Pagos**
+**6. Pagos**
 
 Algunas modalidades de publicación (por ejemplo, el nivel "Destacado") tienen
 un costo, que se cobra a través de Mercado Pago. El pago corresponde
 únicamente a la visibilidad de la publicación en la plataforma, no a ningún
 resultado de venta.
 
-**5. Límite de responsabilidad**
+**7. Propiedad intelectual del Sitio**
+
+El diseño, la marca, el logo y los contenidos propios del Sitio (por
+ejemplo, el Ranking de precios y demás reportes elaborados por Cambio de
+Manos) están protegidos por derechos de autor. No está permitido
+reproducirlos, copiarlos ni reutilizarlos comercialmente sin autorización
+previa por escrito. Esto no incluye el contenido que cada usuario carga sobre
+su propia publicación (fotos, descripciones, datos del negocio), del cual
+sigue siendo titular.
+
+**8. Límite de responsabilidad**
 
 Cambio de Manos no participa en la due diligence, la valuación, ni la
 negociación entre comprador y vendedor. Cualquier acuerdo, contrato o pago
 que se realice como consecuencia de un contacto originado en la plataforma es
 exclusiva responsabilidad de las partes involucradas. Recomendamos siempre
 asesorarse con un contador y un abogado antes de comprar o vender un fondo de
-comercio o una empresa.
+comercio o una empresa. Tampoco somos responsables por interrupciones del
+Sitio originadas en fallas de terceros (hosting, proveedores de internet,
+pasarelas de pago), casos de fuerza mayor, ni por accesos no autorizados a
+tu cuenta que resulten de un mal resguardo de tu contraseña.
 
-**6. Veracidad de la información e indemnidad**
+**9. Veracidad de la información e indemnidad**
 
 Quien publica un negocio es el único responsable de la veracidad de los datos
 declarados (precio, facturación, ganancia, antigüedad, motivo de venta, y
@@ -58,12 +88,19 @@ es decir, hacerse cargo y no reclamarle a la plataforma — frente a cualquier
 reclamo, denuncia o acción legal de terceros que se origine en información
 falsa, inexacta o engañosa que ese usuario haya publicado o declarado.
 
-**7. Modificaciones**
+**10. Ley aplicable y jurisdicción**
+
+Estos Términos se rigen por las leyes de la República Argentina. Para
+cualquier controversia que pudiera surgir, las partes se someten a la
+competencia de los tribunales ordinarios de la Ciudad Autónoma de Buenos
+Aires, con renuncia a cualquier otro fuero que pudiera corresponder.
+
+**11. Modificaciones**
 
 Podemos actualizar estos términos en cualquier momento. Los cambios rigen
 desde su publicación en esta misma página.
 
-**8. Contacto**
+**12. Contacto**
 
 Consultas sobre estos términos: cambiodefirma.contacto@gmail.com
 """

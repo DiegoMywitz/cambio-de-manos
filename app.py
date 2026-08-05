@@ -189,6 +189,7 @@ st.sidebar.divider()
 leg1, leg2 = st.sidebar.columns(2)
 leg1.button("Términos", use_container_width=True, on_click=ir_a, args=("terminos",))
 leg2.button("Privacidad", use_container_width=True, on_click=ir_a, args=("privacidad",))
+st.sidebar.caption("¿Necesitás ayuda? Escribinos a cambiodefirma.contacto@gmail.com")
 
 # ---------- Vista: publicar ----------
 if st.session_state.vista == "publicar":
