@@ -176,38 +176,38 @@ def inject():
         .cdm-logo-panel {{
             display: flex;
             align-items: center;
-            gap: 0.85rem;
+            gap: 1rem;
             background-color: {BG};
             border-radius: 4px;
-            padding: 0.9rem 1rem;
+            padding: 1.1rem 1.2rem;
             margin-bottom: 1rem;
             cursor: pointer;
         }}
         .cdm-logo-panel.cdm-logo-panel--static {{
             cursor: default;
-            padding: 0.4rem 0 1.1rem 0;
+            padding: 0.5rem 0 1.3rem 0;
             background-color: transparent;
         }}
         .cdm-logo-panel img {{
-            width: 44px;
-            height: 44px;
+            width: 62px;
+            height: 62px;
             flex-shrink: 0;
         }}
         .cdm-logo-word {{
             font-family: 'Helvetica Neue', Arial, sans-serif;
             font-weight: 700;
-            font-size: 1.05rem;
-            line-height: 1.05;
+            font-size: 1.35rem;
+            line-height: 1.08;
             letter-spacing: 0.3px;
             color: {NAVY_DARK} !important;
             text-shadow: none !important;
         }}
         .cdm-logo-tagline {{
             font-family: 'Helvetica Neue', Arial, sans-serif;
-            font-size: 0.56rem;
+            font-size: 0.68rem;
             letter-spacing: 1.3px;
             color: {ICON_BLUE} !important;
-            margin-top: 0.15rem;
+            margin-top: 0.2rem;
         }}
 
         .cdm-badge-destacado {{
@@ -354,18 +354,25 @@ def inject_pwa():
 def scroll_to_top():
     """Vuelve el scroll al principio de la página. Streamlit no navega de verdad
     entre pantallas (es todo la misma página), así que al cambiar de sección el
-    navegador mantiene el scroll donde estaba. Reintenta durante varios segundos
-    porque en vistas con formularios (ej. la ficha de un negocio sin sesión
-    iniciada, que muestra el formulario de login debajo) el navegador puede
-    autoenfocar un campo y volver a arrastrar el scroll hacia abajo después de
-    la primera corrección."""
+    navegador mantiene el scroll donde estaba.
+
+    En esta versión de Streamlit, el scroll real no ocurre en `window` — ocurre
+    en el contenedor interno `[data-testid="stMain"]` (confirmado inspeccionando
+    scrollHeight/clientHeight de los elementos). `window.scrollTo()` no hacía
+    nada porque apuntaba al lugar equivocado. Reintenta durante varios segundos
+    por si un formulario (ej. login en la ficha de un negocio) autoenfoca un
+    campo y vuelve a mover el scroll después de la primera corrección."""
     components.html(
         """
         <script>
+        function irArriba() {
+            var doc = window.parent.document;
+            var main = doc.querySelector('[data-testid="stMain"]');
+            if (main) { main.scrollTo(0, 0); }
+            window.parent.scrollTo(0, 0);
+        }
         var _intentos = [0, 100, 250, 500, 900, 1400, 2000, 2800];
-        _intentos.forEach(function(ms) {
-            setTimeout(function() { window.parent.scrollTo(0, 0); }, ms);
-        });
+        _intentos.forEach(function(ms) { setTimeout(irArriba, ms); });
         </script>
         """,
         height=0,
