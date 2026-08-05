@@ -255,6 +255,41 @@ def inject():
                 display: flex !important;
             }}
         }}
+
+        .cdm-como-funciona {{
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+            margin-top: 0.4rem;
+        }}
+        .cdm-como-funciona-paso {{
+            display: flex;
+            align-items: flex-start;
+            gap: 0.7rem;
+        }}
+        .cdm-como-funciona-icono {{
+            flex: none;
+            width: 2.1rem;
+            height: 2.1rem;
+            border-radius: 50%;
+            background-color: {NAVY};
+            border: 1px solid {GOLD};
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }}
+        .cdm-como-funciona-icono svg {{
+            width: 1.05rem;
+            height: 1.05rem;
+            stroke: {GOLD};
+        }}
+        .cdm-como-funciona-texto {{
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 0.82rem;
+            line-height: 1.35;
+            padding-top: 0.25rem;
+            color: #d7dde5 !important;
+        }}
         </style>
         """,
         unsafe_allow_html=True,
@@ -343,6 +378,51 @@ def badge_destacado():
 
 def badge_franquicia():
     st.markdown('<div class="cdm-badge-franquicia">◆ Franquicia</div>', unsafe_allow_html=True)
+
+
+_ICONO_PUBLICAR = (
+    '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'
+    '<rect x="5" y="3.5" width="14" height="17" rx="1.5"></rect>'
+    '<line x1="8" y1="8" x2="16" y2="8"></line>'
+    '<line x1="8" y1="12" x2="16" y2="12"></line>'
+    '<line x1="8" y1="16" x2="13" y2="16"></line>'
+    '</svg>'
+)
+_ICONO_BUSCAR = (
+    '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'
+    '<circle cx="10.5" cy="10.5" r="6.5"></circle>'
+    '<line x1="15.5" y1="15.5" x2="20.5" y2="20.5"></line>'
+    '</svg>'
+)
+_ICONO_CONSULTA = (
+    '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'
+    '<path d="M4 5.5h16v11H9.5L5 20v-3.5H4v-11z"></path>'
+    '</svg>'
+)
+_ICONO_ACUERDO = (
+    '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'
+    '<circle cx="12" cy="12" r="8.5"></circle>'
+    '<path d="M8 12.5l2.5 2.5 5.5-5.5"></path>'
+    '</svg>'
+)
+
+_PASOS_COMO_FUNCIONA = [
+    (_ICONO_PUBLICAR, "El vendedor publica datos básicos del negocio, sin exponer información confidencial."),
+    (_ICONO_BUSCAR, "El comprador filtra por rubro, ubicación y presupuesto."),
+    (_ICONO_CONSULTA, "Si hay interés, deja sus datos y el vendedor evalúa si avanza."),
+    (_ICONO_ACUERDO, "El contacto directo y la negociación quedan entre las partes."),
+]
+
+
+def como_funciona():
+    pasos_html = "".join(
+        f'<div class="cdm-como-funciona-paso">'
+        f'<div class="cdm-como-funciona-icono">{icono}</div>'
+        f'<div class="cdm-como-funciona-texto">{texto}</div>'
+        f'</div>'
+        for icono, texto in _PASOS_COMO_FUNCIONA
+    )
+    st.markdown(f'<div class="cdm-como-funciona">{pasos_html}</div>', unsafe_allow_html=True)
 
 
 _LOGO_B64 = None

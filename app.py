@@ -155,13 +155,9 @@ if usuario:
                        on_click=ir_a, args=("alertas",))
 
 st.sidebar.divider()
-st.sidebar.markdown(
-    "**Cómo funciona**\n\n"
-    "1. El vendedor publica datos básicos del negocio, sin exponer información confidencial.\n"
-    "2. El comprador filtra por rubro, ubicación y presupuesto.\n"
-    "3. Si hay interés, deja sus datos y el vendedor evalúa si avanza.\n"
-    "4. El contacto directo y la negociación quedan entre las partes."
-)
+st.sidebar.markdown("**Cómo funciona**")
+with st.sidebar:
+    style.como_funciona()
 st.sidebar.divider()
 
 if usuario:
@@ -757,10 +753,14 @@ elif st.session_state.vista == "franquicias":
 # ---------- Vista: legales ----------
 elif st.session_state.vista == "terminos":
     st.button("‹ Volver", on_click=ir_a, args=("buscar",))
-    st.markdown(legal.TERMINOS)
+    _leg_col = st.columns([1, 5, 1])[1]
+    with _leg_col:
+        st.markdown(legal.TERMINOS)
 elif st.session_state.vista == "privacidad":
     st.button("‹ Volver", on_click=ir_a, args=("buscar",))
-    st.markdown(legal.PRIVACIDAD)
+    _leg_col = st.columns([1, 5, 1])[1]
+    with _leg_col:
+        st.markdown(legal.PRIVACIDAD)
 
 # ---------- Vista: mis alertas ----------
 elif st.session_state.vista == "alertas":
