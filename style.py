@@ -58,6 +58,12 @@ def inject():
         [data-testid="stSidebar"] .cdm-logo-word {{
             color: #ffffff !important;
         }}
+        [data-testid="stSidebar"] .cdm-logo-panel img {{
+            background-color: {BG};
+            border-radius: 4px;
+            padding: 6px;
+            box-sizing: border-box;
+        }}
         [data-testid="stSidebar"] .cdm-logo-tagline {{
             color: {ICON_BLUE} !important;
         }}
