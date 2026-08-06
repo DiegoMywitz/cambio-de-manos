@@ -46,6 +46,9 @@ def inject():
             min-width: 320px !important;
             width: 320px !important;
         }}
+        [data-testid="stMain"] {{
+            overflow-anchor: none;
+        }}
         [data-testid="stSidebarCollapseButton"] {{
             display: none !important;
         }}
