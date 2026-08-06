@@ -56,7 +56,7 @@ def inject():
             color: #ffffff !important;
         }}
         [data-testid="stSidebar"] .cdm-logo-word {{
-            color: {NAVY_DARK} !important;
+            color: #ffffff !important;
         }}
         [data-testid="stSidebar"] .cdm-logo-tagline {{
             color: {ICON_BLUE} !important;
@@ -186,8 +186,8 @@ def inject():
             overflow: hidden;
         }}
         .cdm-logo-panel img {{
-            width: 34px;
-            height: 34px;
+            width: 44px;
+            height: 44px;
             flex-shrink: 0;
         }}
         .cdm-logo-word {{
@@ -232,36 +232,30 @@ def inject():
         .cdm-logo-decor {{
             flex: 1;
             display: flex;
-            align-items: center;
+            align-items: flex-end;
             justify-content: flex-end;
-            gap: 1.6rem;
-            padding-right: 0.5rem;
+            gap: 0.5rem;
+            padding-right: 1.2rem;
             min-width: 0;
+            height: 64px;
         }}
         .cdm-logo-decor span {{
             display: block;
-            width: 14px;
-            height: 14px;
-            transform: rotate(45deg);
-            background: {ICON_BLUE};
-            opacity: 0.35;
-            animation: cdmLogoFloat 3.2s ease-in-out infinite;
+            width: 12px;
+            border-radius: 3px 3px 0 0;
+            background: linear-gradient(180deg, {GOLD} 0%, {ICON_BLUE} 100%);
+            opacity: 0.55;
+            animation: cdmLogoGrow 2.4s ease-in-out infinite;
+            transform-origin: bottom;
         }}
-        .cdm-logo-decor span:nth-child(2) {{
-            width: 20px;
-            height: 20px;
-            background: {GOLD};
-            animation-delay: 0.5s;
-        }}
-        .cdm-logo-decor span:nth-child(3) {{
-            width: 10px;
-            height: 10px;
-            background: {NAVY};
-            animation-delay: 1s;
-        }}
-        @keyframes cdmLogoFloat {{
-            0%, 100% {{ transform: translateY(0) rotate(45deg); opacity: 0.25; }}
-            50% {{ transform: translateY(-10px) rotate(45deg); opacity: 0.5; }}
+        .cdm-logo-decor span:nth-child(1) {{ height: 22px; animation-delay: 0s; }}
+        .cdm-logo-decor span:nth-child(2) {{ height: 38px; animation-delay: 0.2s; }}
+        .cdm-logo-decor span:nth-child(3) {{ height: 55px; animation-delay: 0.4s; background: linear-gradient(180deg, {GOLD} 0%, {NAVY} 100%); }}
+        .cdm-logo-decor span:nth-child(4) {{ height: 32px; animation-delay: 0.6s; }}
+        .cdm-logo-decor span:nth-child(5) {{ height: 46px; animation-delay: 0.8s; }}
+        @keyframes cdmLogoGrow {{
+            0%, 100% {{ transform: scaleY(0.55); opacity: 0.35; }}
+            50% {{ transform: scaleY(1); opacity: 0.85; }}
         }}
         @media (max-width: 640px) {{
             .cdm-logo-decor {{ display: none; }}
@@ -511,7 +505,7 @@ def main_logo():
         f'<div class="cdm-logo-panel cdm-logo-panel--static">'
         f'<img src="data:image/svg+xml;base64,{_logo_base64()}" alt="Cambio de Manos">'
         f'<div><div class="cdm-logo-word">CAMBIO<br>DE MANOS</div><div class="cdm-logo-tagline">COMPRAVENTA DE EMPRESAS</div></div>'
-        f'<div class="cdm-logo-decor"><span></span><span></span><span></span></div>'
+        f'<div class="cdm-logo-decor"><span></span><span></span><span></span><span></span><span></span></div>'
         f'</div>',
         unsafe_allow_html=True,
     )
