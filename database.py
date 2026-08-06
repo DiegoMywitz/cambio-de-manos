@@ -273,7 +273,7 @@ def verificar_email_con_token(token: str) -> bool:
     return True
 
 
-def crear_token_reset(usuario_id: int, horas_validez: int = 1) -> str:
+def crear_token_reset(usuario_id: int, horas_validez: int = 24) -> str:
     token = secrets.token_urlsafe(32)
     conn = get_connection()
     cur = conn.cursor()
@@ -305,6 +305,29 @@ def obtener_reset_valido(token: str):
     cur.close()
     release_connection(conn)
     return row
+
+
+def diagnosticar_token_reset(token: str) -> str:
+    """Para loguear por qué un link de recuperación no sirvió: no existe, ya se
+    usó, o venció. Sin esto un token inválido siempre daba el mismo mensaje
+    genérico y no había forma de saber cuál de los tres casos era."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT usado, fecha_expiracion, fecha_expiracion > NOW() AS vigente "
+        "FROM password_resets WHERE token = %s",
+        (token,),
+    )
+    row = cur.fetchone()
+    cur.close()
+    release_connection(conn)
+    if row is None:
+        return "no existe ese token"
+    if row["usado"]:
+        return f"ya estaba usado (expiraba {row['fecha_expiracion']})"
+    if not row["vigente"]:
+        return f"venció (expiraba {row['fecha_expiracion']})"
+    return "válido (inesperado que haya fallado)"
 
 
 def actualizar_password_con_token(token: str, password_nueva: str) -> bool:

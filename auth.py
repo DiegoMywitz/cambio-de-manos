@@ -6,6 +6,7 @@ from database import (
     crear_usuario, obtener_usuario_por_email, verificar_password,
     crear_token_reset, obtener_reset_valido, actualizar_password_con_token,
     crear_token_verificacion, verificar_email_con_token,
+    diagnosticar_token_reset,
 )
 import notifications
 import legal
@@ -59,6 +60,7 @@ def _form_olvide_password():
             if usuario is not None:
                 token = crear_token_reset(usuario["id"])
                 link = f"{APP_URL}?reset_token={token}"
+                print(f"[auth] Link de recuperación generado para {usuario['email']}: {token[:8]}...")
                 if notifications.esta_configurado():
                     envio_fallo = not notifications.notificar_reset_password(
                         usuario["email"], usuario["nombre"], link
@@ -88,6 +90,7 @@ def _form_nueva_password(token: str):
     st.title("Elegí una nueva contraseña")
 
     if reset is None:
+        print(f"[auth] Link de recuperación rechazado ({token[:8]}...): {diagnosticar_token_reset(token)}")
         st.error("Este link ya fue usado o venció. Pedí uno nuevo desde 'Ya tengo cuenta'.")
         if st.button("Volver al ingreso"):
             st.query_params.clear()
