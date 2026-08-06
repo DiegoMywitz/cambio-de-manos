@@ -218,22 +218,26 @@ def inject():
            a la derecha para no dejar ese espacio vacío. */
         .cdm-logo-panel.cdm-logo-panel--static {{
             cursor: default;
-            padding: 0.8rem 0 1.3rem 0;
+            padding: 0.2rem 0 1rem 0;
             background-color: transparent;
             background-image: none;
             justify-content: flex-start;
             gap: 1.1rem;
         }}
         .cdm-logo-panel--static img {{
-            width: 62px;
-            height: 62px;
+            width: 82px;
+            height: 82px;
         }}
         .cdm-logo-panel--static .cdm-logo-word {{
-            font-size: 1.4rem;
+            font-size: 1.85rem;
         }}
         .cdm-logo-panel--static .cdm-logo-tagline {{
-            font-size: 0.66rem;
+            font-size: 0.74rem;
             margin-top: 0.2rem;
+        }}
+
+        .block-container {{
+            padding-top: 1.5rem !important;
         }}
         .cdm-logo-decor {{
             flex: 1;
