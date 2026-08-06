@@ -422,21 +422,31 @@ def scroll_to_top():
 
     En esta versión de Streamlit, el scroll real no ocurre en `window` — ocurre
     en el contenedor interno `[data-testid="stMain"]` (confirmado inspeccionando
-    scrollHeight/clientHeight de los elementos). `window.scrollTo()` no hacía
-    nada porque apuntaba al lugar equivocado. Reintenta durante varios segundos
-    por si un formulario (ej. login en la ficha de un negocio) autoenfoca un
-    campo y vuelve a mover el scroll después de la primera corrección."""
+    scrollHeight/clientHeight de los elementos).
+
+    Los reintentos con setTimeout de la versión anterior no servían: Streamlit
+    destruye y vuelve a crear este mismo iframe cada vez que sigue llegando
+    contenido a la vista nueva (por ejemplo, mientras se cargan los resultados
+    de la búsqueda), así que casi ningún setTimeout llegaba a dispararse antes
+    de que su propio iframe muriera. En cambio, un MutationObserver reacciona
+    a cada cambio real del DOM mientras el iframe esté vivo, y además corrige
+    apenas se monta — así, aunque Streamlit lo destruya y lo vuelva a crear
+    varias veces seguidas, cada instancia nueva corrige el scroll al nacer."""
     components.html(
         """
         <script>
         function irArriba() {
             var doc = window.parent.document;
             var main = doc.querySelector('[data-testid="stMain"]');
-            if (main) { main.scrollTo(0, 0); }
+            if (main) { main.scrollTop = 0; }
             window.parent.scrollTo(0, 0);
         }
-        var _intentos = [0, 100, 250, 500, 900, 1400, 2000, 2800];
-        _intentos.forEach(function(ms) { setTimeout(irArriba, ms); });
+        irArriba();
+        var doc = window.parent.document;
+        var objetivo = doc.querySelector('[data-testid="stMain"]') || doc.body;
+        var observer = new MutationObserver(irArriba);
+        observer.observe(objetivo, {childList: true, subtree: true});
+        setTimeout(function() { observer.disconnect(); }, 4000);
         </script>
         """,
         height=0,
