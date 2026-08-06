@@ -176,27 +176,24 @@ def inject():
         .cdm-logo-panel {{
             display: flex;
             align-items: center;
-            gap: 1rem;
-            background-color: {BG};
-            background-image:
-                radial-gradient(circle at 88% 15%, rgba(15,38,71,0.07) 0%, transparent 45%),
-                repeating-linear-gradient(135deg, rgba(15,38,71,0.05) 0px, rgba(15,38,71,0.05) 1px, transparent 1px, transparent 10px);
+            gap: 0.7rem;
+            background: none;
             border-radius: 4px;
-            padding: 0.9rem 1rem;
+            padding: 0.5rem 0.2rem;
             margin-bottom: 1rem;
             cursor: pointer;
             position: relative;
             overflow: hidden;
         }}
         .cdm-logo-panel img {{
-            width: 48px;
-            height: 48px;
+            width: 34px;
+            height: 34px;
             flex-shrink: 0;
         }}
         .cdm-logo-word {{
             font-family: 'Helvetica Neue', Arial, sans-serif;
             font-weight: 700;
-            font-size: 1.5rem;
+            font-size: 1.05rem;
             line-height: 1.08;
             letter-spacing: 0.3px;
             color: {NAVY_DARK} !important;
@@ -204,33 +201,70 @@ def inject():
         }}
         .cdm-logo-tagline {{
             font-family: 'Helvetica Neue', Arial, sans-serif;
-            font-size: 0.7rem;
+            font-size: 0.58rem;
             letter-spacing: 1.3px;
             color: {ICON_BLUE} !important;
-            margin-top: 0.2rem;
+            margin-top: 0.15rem;
         }}
 
-        /* El logo de la portada (estático, arriba de la búsqueda): grande y
-           centrado, para llenar el espacio vacío de arriba en vez de quedar
-           chico y pegado a la izquierda. */
+        /* El logo de la portada (estático, arriba de la búsqueda): a la
+           izquierda como antes, un poco más grande, y con un adorno animado
+           a la derecha para no dejar ese espacio vacío. */
         .cdm-logo-panel.cdm-logo-panel--static {{
             cursor: default;
-            padding: 1.2rem 0 1.6rem 0;
+            padding: 0.8rem 0 1.3rem 0;
             background-color: transparent;
             background-image: none;
-            justify-content: center;
-            gap: 1.4rem;
+            justify-content: flex-start;
+            gap: 1.1rem;
         }}
         .cdm-logo-panel--static img {{
-            width: 96px;
-            height: 96px;
+            width: 62px;
+            height: 62px;
         }}
         .cdm-logo-panel--static .cdm-logo-word {{
-            font-size: 2.1rem;
+            font-size: 1.4rem;
         }}
         .cdm-logo-panel--static .cdm-logo-tagline {{
-            font-size: 0.8rem;
-            margin-top: 0.25rem;
+            font-size: 0.66rem;
+            margin-top: 0.2rem;
+        }}
+        .cdm-logo-decor {{
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 1.6rem;
+            padding-right: 0.5rem;
+            min-width: 0;
+        }}
+        .cdm-logo-decor span {{
+            display: block;
+            width: 14px;
+            height: 14px;
+            transform: rotate(45deg);
+            background: {ICON_BLUE};
+            opacity: 0.35;
+            animation: cdmLogoFloat 3.2s ease-in-out infinite;
+        }}
+        .cdm-logo-decor span:nth-child(2) {{
+            width: 20px;
+            height: 20px;
+            background: {GOLD};
+            animation-delay: 0.5s;
+        }}
+        .cdm-logo-decor span:nth-child(3) {{
+            width: 10px;
+            height: 10px;
+            background: {NAVY};
+            animation-delay: 1s;
+        }}
+        @keyframes cdmLogoFloat {{
+            0%, 100% {{ transform: translateY(0) rotate(45deg); opacity: 0.25; }}
+            50% {{ transform: translateY(-10px) rotate(45deg); opacity: 0.5; }}
+        }}
+        @media (max-width: 640px) {{
+            .cdm-logo-decor {{ display: none; }}
         }}
 
         .cdm-badge-destacado {{
@@ -474,7 +508,11 @@ def _logo_base64() -> str:
 
 def main_logo():
     st.markdown(
-        f'<div class="cdm-logo-panel cdm-logo-panel--static"><img src="data:image/svg+xml;base64,{_logo_base64()}" alt="Cambio de Manos"><div><div class="cdm-logo-word">CAMBIO<br>DE MANOS</div><div class="cdm-logo-tagline">COMPRAVENTA DE EMPRESAS</div></div></div>',
+        f'<div class="cdm-logo-panel cdm-logo-panel--static">'
+        f'<img src="data:image/svg+xml;base64,{_logo_base64()}" alt="Cambio de Manos">'
+        f'<div><div class="cdm-logo-word">CAMBIO<br>DE MANOS</div><div class="cdm-logo-tagline">COMPRAVENTA DE EMPRESAS</div></div>'
+        f'<div class="cdm-logo-decor"><span></span><span></span><span></span></div>'
+        f'</div>',
         unsafe_allow_html=True,
     )
 
