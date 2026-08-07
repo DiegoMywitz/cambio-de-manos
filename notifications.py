@@ -42,6 +42,7 @@ SMTP_PORT = int(_config("CDM_SMTP_PORT", "587"))
 SMTP_USER = _config("CDM_SMTP_USER")
 SMTP_PASSWORD = _config("CDM_SMTP_PASSWORD")
 FROM_ADDRESS = _config("CDM_FROM_ADDRESS", SMTP_USER)
+ADMIN_EMAIL = _config("CDM_ADMIN_EMAIL", "cambiodefirma.contacto@gmail.com")
 
 
 def esta_configurado() -> bool:
@@ -127,7 +128,20 @@ def notificar_reset_password(email: str, nombre: str, link: str) -> bool:
     cuerpo = (
         f"Hola {nombre},\n\n"
         "Recibimos un pedido para restablecer tu contraseña en Cambio de Manos.\n\n"
-        f"Para elegir una nueva contraseña, ingresá a este link (válido por 1 hora):\n{link}\n\n"
+        f"Para elegir una nueva contraseña, ingresá a este link (válido por 24 horas):\n{link}\n\n"
         "Si vos no pediste esto, podés ignorar este email: tu contraseña actual sigue funcionando."
     )
     return enviar_email(email, asunto, cuerpo)
+
+
+def notificar_reporte_publicacion(pub_id: int, titulo: str, motivo: str, detalle: str,
+                                   email_reportante: str = "") -> bool:
+    asunto = f"Cambio de Manos: reporte de publicación #{pub_id}"
+    cuerpo = (
+        f"Alguien reportó la publicación #{pub_id} ({titulo}).\n\n"
+        f"Motivo: {motivo}\n"
+        f"Detalle: {detalle or '(sin detalle)'}\n"
+        f"Contacto de quien reporta: {email_reportante or '(no informado)'}\n\n"
+        f"Revisala en: {_config('CDM_APP_BASE_URL', '').rstrip('/')}/?p=negocio&id={pub_id}"
+    )
+    return enviar_email(ADMIN_EMAIL, asunto, cuerpo)

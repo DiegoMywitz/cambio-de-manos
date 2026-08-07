@@ -444,6 +444,26 @@ elif st.session_state.vista == "detalle" and st.session_state.pub_seleccionada:
         usuario = auth.usuario_actual()
         es_dueno = usuario and usuario["id"] == pub["usuario_id"]
 
+        if not es_dueno:
+            with st.expander("🚩 Reportar esta publicación"):
+                with st.form(f"form_reporte_{pub['id']}", clear_on_submit=True):
+                    motivo_r = st.selectbox(
+                        "Motivo",
+                        ["Contenido inapropiado u ofensivo", "Foto o video inapropiado",
+                         "Estafa o publicación falsa", "Spam o publicidad no relacionada", "Otro"],
+                    )
+                    detalle_r = st.text_area("Contanos más (opcional)")
+                    enviar_reporte = st.form_submit_button("Enviar reporte")
+                    if enviar_reporte:
+                        enviado_reporte = notifications.notificar_reporte_publicacion(
+                            pub["id"], pub["titulo"], motivo_r, detalle_r,
+                            usuario["email"] if usuario else "",
+                        )
+                        if not enviado_reporte:
+                            print(f"[app] Reporte de publicación #{pub['id']} no se pudo enviar por email "
+                                  f"(motivo: {motivo_r!r}, detalle: {detalle_r!r})")
+                        st.success("Gracias, revisamos la publicación a la brevedad.")
+
         if usuario and not es_dueno:
             if es_favorito(usuario["id"], pub["id"]):
                 if st.button("★ Quitar de favoritos", key=f"fav_detalle_{pub['id']}"):
