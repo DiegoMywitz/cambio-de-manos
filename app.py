@@ -320,11 +320,19 @@ if st.session_state.vista == "publicar" and not pub_pendiente:
             # de una foto o el video, no hay que perderla ni tirar un error sin control:
             # se avisa y se sigue, el usuario puede reintentar las fotos/video después.
             fotos_con_error = 0
+            fotos_rechazadas = []
             if fotos:
                 with st.spinner(f"Subiendo {len(fotos[:5])} foto(s)..."):
                     for i, foto in enumerate(fotos[:5]):
+                        contenido_foto = foto.getvalue()
+                        apta, motivo_rechazo = images.imagen_es_apta(contenido_foto)
+                        if not apta:
+                            fotos_rechazadas.append((foto.name, motivo_rechazo))
+                            print(f"[publicar] Foto rechazada por moderación en pub {pub_id}: "
+                                  f"{foto.name!r} ({motivo_rechazo})")
+                            continue
                         try:
-                            url = images.subir_imagen(pub_id, foto.getvalue(), foto.name)
+                            url = images.subir_imagen(pub_id, contenido_foto, foto.name)
                             agregar_imagen(pub_id, url, orden=i)
                         except Exception as e:
                             fotos_con_error += 1
@@ -339,6 +347,13 @@ if st.session_state.vista == "publicar" and not pub_pendiente:
                     except Exception as e:
                         video_con_error = True
                         print(f"[publicar] Falló la subida de video para pub {pub_id}: {e!r}")
+
+            if fotos_rechazadas:
+                st.error(
+                    "No se publicaron estas fotos porque no cumplen las normas del sitio: "
+                    + ", ".join(f"**{nombre}** ({motivo})" for nombre, motivo in fotos_rechazadas)
+                    + ". Si creés que es un error, escribinos a **cambiodefirma.contacto@gmail.com**."
+                )
 
             if fotos_con_error or video_con_error:
                 detalle = []
