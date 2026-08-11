@@ -138,13 +138,29 @@ tus datos de contacto quedan visibles para quien consulta), para que puedan
 comunicarse directamente. No vendemos ni cedemos tus datos a terceros con
 fines publicitarios.
 
+Si publicás un negocio con costo, los datos de pago los procesa directamente
+Mercado Pago: nosotros no accedemos a tu número de tarjeta ni a tus
+credenciales de pago, solo recibimos la confirmación de si el pago se
+acreditó.
+
 **4. Dónde se guardan**
 
 Los datos se almacenan en una base de datos (Supabase/Postgres) con acceso
 restringido. Las contraseñas se guardan con hash (PBKDF2), nunca en texto
-plano.
+plano. Nuestro proveedor de base de datos e infraestructura (Supabase) puede
+alojar los servidores fuera de la Argentina; al usar el Sitio, aceptás que
+tus datos puedan procesarse en esos servidores, con las mismas medidas de
+resguardo descriptas en esta política. Ningún sistema es completamente
+inexpugnable: aplicamos medidas de seguridad razonables, pero no podemos
+garantizar una protección absoluta ante accesos no autorizados.
 
-**5. Tus derechos**
+**5. Cookies**
+
+El Sitio usa cookies o mecanismos similares (por ejemplo, para mantener tu
+sesión iniciada) necesarios para su funcionamiento. No usamos cookies de
+seguimiento publicitario de terceros.
+
+**6. Tus derechos**
 
 Como titular de tus datos personales, tenés derecho a acceder, rectificar,
 actualizar o solicitar la supresión de tus datos en cualquier momento,
@@ -152,7 +168,7 @@ escribiendo a cambiodefirma.contacto@gmail.com. También podés ejercer tus
 derechos ante la Agencia de Acceso a la Información Pública
 (www.argentina.gob.ar/aaip), órgano de control de la Ley 25.326.
 
-**6. Contacto**
+**7. Contacto**
 
 Consultas sobre esta política: cambiodefirma.contacto@gmail.com
 """
