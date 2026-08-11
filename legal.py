@@ -116,7 +116,13 @@ Aires, con renuncia a cualquier otro fuero que pudiera corresponder.
 Podemos actualizar estos términos en cualquier momento. Los cambios rigen
 desde su publicación en esta misma página.
 
-**14. Contacto**
+**14. Quién opera el Sitio**
+
+Cambio de Manos es operado por Diego Mywitz (CUIT/CUIL 20-26702199-7),
+monotributista, con domicilio en Pueyrredón 3881, Ciudadela, Provincia de
+Buenos Aires (CP 1702), República Argentina.
+
+**15. Contacto**
 
 Consultas sobre estos términos: cambiodefirma.contacto@gmail.com
 """
