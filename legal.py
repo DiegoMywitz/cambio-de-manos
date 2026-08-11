@@ -77,7 +77,23 @@ Sitio originadas en fallas de terceros (hosting, proveedores de internet,
 pasarelas de pago), casos de fuerza mayor, ni por accesos no autorizados a
 tu cuenta que resulten de un mal resguardo de tu contraseña.
 
-**9. Veracidad de la información e indemnidad**
+**9. Riesgos propios del uso de Internet**
+
+El uso del Sitio y de Internet en general conlleva riesgos que no dependen de
+Cambio de Manos: la posibilidad de que un tercero intercepte información
+transmitida, o de que el equipo desde el que accedés sea vulnerado por
+software malicioso ajeno al Sitio. No nos hacemos responsables por daños que
+se originen en esos riesgos generales de Internet, ajenos a nuestro control.
+
+**10. Moderación de contenido**
+
+Aplicamos filtros automáticos y un sistema de reportes para detectar
+publicaciones o imágenes que violen estos Términos, pero no podemos
+garantizar que capten el 100% de los casos antes de que un contenido se haga
+público. Si ves algo que no debería estar publicado, usá el botón "Reportar
+esta publicación" o escribinos a cambiodefirma.contacto@gmail.com.
+
+**11. Veracidad de la información e indemnidad**
 
 Quien publica un negocio es el único responsable de la veracidad de los datos
 declarados (precio, facturación, ganancia, antigüedad, motivo de venta, y
@@ -88,19 +104,19 @@ es decir, hacerse cargo y no reclamarle a la plataforma — frente a cualquier
 reclamo, denuncia o acción legal de terceros que se origine en información
 falsa, inexacta o engañosa que ese usuario haya publicado o declarado.
 
-**10. Ley aplicable y jurisdicción**
+**12. Ley aplicable y jurisdicción**
 
 Estos Términos se rigen por las leyes de la República Argentina. Para
 cualquier controversia que pudiera surgir, las partes se someten a la
 competencia de los tribunales ordinarios de la Ciudad Autónoma de Buenos
 Aires, con renuncia a cualquier otro fuero que pudiera corresponder.
 
-**11. Modificaciones**
+**13. Modificaciones**
 
 Podemos actualizar estos términos en cualquier momento. Los cambios rigen
 desde su publicación en esta misma página.
 
-**12. Contacto**
+**14. Contacto**
 
 Consultas sobre estos términos: cambiodefirma.contacto@gmail.com
 """
