@@ -410,7 +410,7 @@ if st.session_state.vista == "publicar" and pub_pendiente:
                             f"**{pub_p['id']}** y lo activamos manualmente en menos de 48hs."
                         )
             st.divider()
-            if st.button("Publicar otro negocio en vez de este"):
+            if st.button("Publicar otro negocio"):
                 st.session_state.pub_pendiente_pago = None
                 st.query_params.clear()
                 st.rerun()
