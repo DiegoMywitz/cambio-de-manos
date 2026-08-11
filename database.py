@@ -151,6 +151,13 @@ def init_db():
             fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
+        CREATE TABLE IF NOT EXISTS videos_publicacion (
+            id SERIAL PRIMARY KEY,
+            publicacion_id INTEGER NOT NULL REFERENCES publicaciones(id),
+            url TEXT NOT NULL,
+            fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
         CREATE TABLE IF NOT EXISTS favoritos (
             id SERIAL PRIMARY KEY,
             usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
@@ -623,10 +630,35 @@ def agregar_imagen(pub_id: int, url: str, orden: int = 0):
 def agregar_video(pub_id: int, url: str):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("UPDATE publicaciones SET video_url = %s WHERE id = %s", (url, pub_id))
+    cur.execute(
+        "INSERT INTO videos_publicacion (publicacion_id, url) VALUES (%s, %s)",
+        (pub_id, url),
+    )
     conn.commit()
     cur.close()
     release_connection(conn)
+
+
+def listar_videos(pub_id: int):
+    """Videos de una publicación. Incluye, como respaldo, el video_url viejo
+    (de antes de soportar varios videos) si esa publicación no tiene ninguno
+    en la tabla nueva."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT url FROM videos_publicacion WHERE publicacion_id = %s ORDER BY id",
+        (pub_id,),
+    )
+    urls = [r["url"] for r in cur.fetchall()]
+    if not urls:
+        cur.execute("SELECT video_url FROM publicaciones WHERE id = %s", (pub_id,))
+        legacy = cur.fetchone()
+        if legacy and legacy["video_url"]:
+            urls = [legacy["video_url"]]
+    cur.close()
+    release_connection(conn)
+    return urls
+
 
 
 def listar_imagenes(pub_id: int):

@@ -19,7 +19,7 @@ ACCESS_TOKEN = _config("CDM_MP_ACCESS_TOKEN")
 # Básico: precio de lanzamiento hasta CDM_PROMO_BASICO_HASTA (inclusive), después
 # pasa al precio estándar. Fecha configurable por si el lanzamiento se corre.
 PRECIO_BASICO_PROMO = float(_config("CDM_PRECIO_BASICO_PROMO", "9999"))
-PRECIO_BASICO_ESTANDAR = float(_config("CDM_PRECIO_BASICO_ESTANDAR", "23999"))
+PRECIO_BASICO_ESTANDAR = float(_config("CDM_PRECIO_BASICO_ESTANDAR", "14999"))
 PROMO_BASICO_HASTA = _config("CDM_PROMO_BASICO_HASTA", "2026-10-04")
 PRECIO_DESTACADO = float(_config("CDM_PRECIO_DESTACADO", "54000"))
 
