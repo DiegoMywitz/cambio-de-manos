@@ -129,6 +129,8 @@ def init_db():
         ALTER TABLE publicaciones ADD COLUMN IF NOT EXISTS es_franquicia BOOLEAN DEFAULT FALSE;
         ALTER TABLE publicaciones ADD COLUMN IF NOT EXISTS fecha_venta TIMESTAMP;
         ALTER TABLE publicaciones ADD COLUMN IF NOT EXISTS video_url TEXT;
+        ALTER TABLE publicaciones ADD COLUMN IF NOT EXISTS promo_gratis BOOLEAN DEFAULT FALSE;
+        ALTER TABLE publicaciones ADD COLUMN IF NOT EXISTS fecha_fin_promo_gratis TIMESTAMP;
 
         CREATE TABLE IF NOT EXISTS consultas (
             id SERIAL PRIMARY KEY,
@@ -391,6 +393,47 @@ def crear_publicacion(data: dict, estado: str = "activa", tier: str = "basico") 
     cur.close()
     release_connection(conn)
     return new_id
+
+
+def contar_publicaciones_promo_gratis() -> int:
+    """Cuántas publicaciones ya usaron el cupo de lanzamiento (primeros N gratis)."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) AS c FROM publicaciones WHERE promo_gratis = TRUE")
+    total = cur.fetchone()["c"]
+    cur.close()
+    release_connection(conn)
+    return total
+
+
+def marcar_promo_gratis(pub_id: int, dias: int = 30):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE publicaciones SET promo_gratis = TRUE, "
+        "fecha_fin_promo_gratis = NOW() + %s * INTERVAL '1 day' WHERE id = %s",
+        (dias, pub_id),
+    )
+    conn.commit()
+    cur.close()
+    release_connection(conn)
+
+
+def publicaciones_promo_vencidas():
+    """Publicaciones con el mes de promo gratis vencido que siguen activas (para pausarlas)."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT p.*, u.email, u.nombre FROM publicaciones p
+        JOIN usuarios u ON u.id = p.usuario_id
+        WHERE p.promo_gratis = TRUE AND p.estado = 'activa' AND p.fecha_fin_promo_gratis < NOW()
+        """
+    )
+    rows = cur.fetchall()
+    cur.close()
+    release_connection(conn)
+    return rows
 
 
 def activar_publicacion(pub_id: int):

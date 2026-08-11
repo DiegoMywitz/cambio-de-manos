@@ -14,6 +14,7 @@ from database import (
     agregar_imagen, listar_imagenes, imagenes_portada, agregar_video,
     es_favorito, agregar_favorito, quitar_favorito, listar_favoritos_de_usuario,
     crear_alerta, listar_alertas_de_usuario, eliminar_alerta,
+    contar_publicaciones_promo_gratis, marcar_promo_gratis,
 )
 import style
 import auth
@@ -262,13 +263,39 @@ if st.session_state.vista == "publicar" and not pub_pendiente:
         if video:
             st.video(video)
 
+    promo_disponible = (not es_franquicia
+                         and contar_publicaciones_promo_gratis() < payments.CUPO_PROMO_GRATIS)
+
     tier = "basico"
-    if payments.esta_configurado():
+    if es_franquicia:
+        st.info(
+            "El precio de las publicaciones de franquicia se coordina directamente con vos "
+            "— no se cobra automáticamente acá. Nos vamos a contactar por email para definir "
+            "el valor y la modalidad."
+        )
+    elif promo_disponible:
+        st.success(
+            f"🎉 ¡Publicación GRATIS por tus primeros {payments.DIAS_PROMO_GRATIS} días! "
+            f"Es parte del cupo de lanzamiento para los primeros {payments.CUPO_PROMO_GRATIS} "
+            "negocios publicados en Cambio de Manos."
+        )
+        tier_label = st.radio(
+            "Nivel de publicación (sin costo durante la promo)",
+            ["Básico", "Destacado — aparece primero en la búsqueda"],
+            key="pub_tier_label",
+        )
+        tier = "destacado" if tier_label.startswith("Destacado") else "basico"
+        st.caption(
+            f"Se publica gratis por {payments.DIAS_PROMO_GRATIS} días. Después de ese plazo se "
+            "pausa hasta que la pagues para mantenerla activa."
+        )
+    elif payments.esta_configurado():
+        precios_vigentes = payments.precios_por_tier()
         tier_label = st.radio(
             "Nivel de publicación",
             [
-                f"Básico — ${payments.PRECIO_PUBLICACION:,.0f} ARS".replace(",", "."),
-                f"Destacado — ${payments.PRECIO_DESTACADO:,.0f} ARS (aparece primero en la búsqueda)".replace(",", "."),
+                f"Básico — ${precios_vigentes['basico']:,.0f} ARS".replace(",", "."),
+                f"Destacado — ${precios_vigentes['destacado']:,.0f} ARS (aparece primero en la búsqueda)".replace(",", "."),
             ],
             key="pub_tier_label",
         )
@@ -298,7 +325,10 @@ if st.session_state.vista == "publicar" and not pub_pendiente:
                 st.warning("Esta publicación ya se cargó hace un momento (evitamos duplicarla).")
                 st.toast("Ya estaba publicada, no se duplicó", icon="ℹ️")
                 st.stop()
-            estado_inicial = "pendiente_pago" if payments.esta_configurado() else "activa"
+            if es_franquicia or promo_disponible:
+                estado_inicial = "activa"
+            else:
+                estado_inicial = "pendiente_pago" if payments.esta_configurado() else "activa"
             pub_id = crear_publicacion({
                 "usuario_id": usuario_id_actual,
                 "titulo": titulo,
@@ -369,6 +399,15 @@ if st.session_state.vista == "publicar" and not pub_pendiente:
 
             if estado_inicial == "pendiente_pago":
                 st.session_state.pub_pendiente_pago = pub_id
+            elif es_franquicia:
+                st.success(f"Publicación registrada con el identificador N.º {pub_id}. "
+                           "Te vamos a contactar para coordinar el precio.")
+                st.toast("¡Publicación enviada!", icon="✅")
+            elif promo_disponible:
+                marcar_promo_gratis(pub_id, dias=payments.DIAS_PROMO_GRATIS)
+                st.success(f"Publicación registrada con el identificador N.º {pub_id}, "
+                           f"gratis por {payments.DIAS_PROMO_GRATIS} días. 🎉")
+                st.toast("¡Publicación enviada!", icon="✅")
             else:
                 st.success(f"Publicación registrada con el identificador N.º {pub_id}.")
                 st.toast("¡Publicación enviada!", icon="✅")
@@ -385,7 +424,7 @@ if st.session_state.vista == "publicar" and pub_pendiente:
             style.kicker("Alta de publicación")
             st.title("Falta confirmar el pago")
             etiqueta_tier = "Destacado" if pub_p["tier"] == "destacado" else "Básico"
-            precio_tier = payments.PRECIOS_POR_TIER.get(pub_p["tier"], payments.PRECIO_PUBLICACION)
+            precio_tier = payments.precios_por_tier().get(pub_p["tier"], payments.precio_basico_vigente())
             st.caption(
                 f"Tu publicación **\"{cap(pub_p['titulo'])}\"** quedó guardada como nivel **{etiqueta_tier}** "
                 f"(${precio_tier:,.0f} ARS)".replace(",", ".") +

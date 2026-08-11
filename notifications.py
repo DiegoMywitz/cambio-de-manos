@@ -145,3 +145,16 @@ def notificar_reporte_publicacion(pub_id: int, titulo: str, motivo: str, detalle
         f"Revisala en: {_config('CDM_APP_BASE_URL', '').rstrip('/')}/?p=negocio&id={pub_id}"
     )
     return enviar_email(ADMIN_EMAIL, asunto, cuerpo)
+
+
+def notificar_promo_vencida(email: str, nombre: str, titulo: str, pub_id: int) -> bool:
+    asunto = f"Cambio de Manos: se venció el mes gratis de \"{titulo}\""
+    link_mis_pub = f"{_config('CDM_APP_BASE_URL', '').rstrip('/')}/?p=mis-publicaciones"
+    cuerpo = (
+        f"Hola {nombre},\n\n"
+        f"El mes gratis de tu publicación \"{titulo}\" (N.º {pub_id}) terminó, así que dejó "
+        "de verse en las búsquedas hasta que la pagues.\n\n"
+        f"Para reactivarla, entrá a {link_mis_pub} (Mis publicaciones) y pagala desde ahí.\n\n"
+        "Si vendiste el negocio o ya no querés seguir publicándolo, no hace falta que hagas nada."
+    )
+    return enviar_email(email, asunto, cuerpo)
