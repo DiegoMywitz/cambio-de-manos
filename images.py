@@ -91,3 +91,15 @@ def subir_video(pub_id: int, contenido: bytes, nombre_original: str) -> str:
         ruta, contenido, {"content-type": f"video/{extension}"}
     )
     return client.storage.from_(BUCKET).get_public_url(ruta)
+
+
+def subir_comprobante(pub_id: int, contenido: bytes, nombre_original: str) -> str:
+    """Sube un comprobante de pago (foto o PDF) al bucket de Supabase Storage."""
+    extension = nombre_original.rsplit(".", 1)[-1].lower() if "." in nombre_original else "jpg"
+    content_type = "application/pdf" if extension == "pdf" else f"image/{extension}"
+    ruta = f"{pub_id}/comprobantes/{uuid.uuid4().hex}.{extension}"
+    client = _client()
+    client.storage.from_(BUCKET).upload(
+        ruta, contenido, {"content-type": content_type}
+    )
+    return client.storage.from_(BUCKET).get_public_url(ruta)

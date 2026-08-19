@@ -1,4 +1,5 @@
 import html
+import os
 from datetime import date
 
 import streamlit as st
@@ -15,6 +16,7 @@ from database import (
     es_favorito, agregar_favorito, quitar_favorito, listar_favoritos_de_usuario,
     crear_alerta, listar_alertas_de_usuario, eliminar_alerta,
     contar_publicaciones_promo_gratis, marcar_promo_gratis,
+    agregar_comprobante, listar_comprobantes_pendientes, marcar_comprobante_revisado,
 )
 import style
 import auth
@@ -38,6 +40,7 @@ VISTA_PARAMS = {
     "favoritos": "favoritos",
     "alertas": "alertas",
     "acceso": "acceso",
+    "comprobantes": "comprobantes",
 }
 PARAM_VISTAS = {param: vista for vista, param in VISTA_PARAMS.items()}
 
@@ -92,6 +95,49 @@ if "pub_pendiente_pago" not in st.session_state:
 
 def cap(s):
     return s[:1].upper() + s[1:] if s else s
+
+
+def _config(key, default=None):
+    try:
+        if key in st.secrets:
+            return st.secrets[key]
+    except Exception:
+        pass
+    return os.environ.get(key, default)
+
+
+ADMIN_LOGIN_EMAIL = _config("CDM_ADMIN_LOGIN_EMAIL", "")
+
+
+def es_admin(usuario) -> bool:
+    return bool(usuario and ADMIN_LOGIN_EMAIL and usuario["email"].lower() == ADMIN_LOGIN_EMAIL.lower())
+
+
+def bloque_subir_comprobante(pub_id: int, usuario_id: int, titulo: str, key_suffix: str):
+    """Uploader de comprobante para cuando Mercado Pago no detectó el pago solo.
+    Queda pendiente de revisión manual en el panel de admin (Comprobantes pendientes)."""
+    with st.expander("¿Ya pagaste y no se refleja? Adjuntá el comprobante"):
+        comprobante = st.file_uploader(
+            "Comprobante de pago (foto o PDF)", type=["jpg", "jpeg", "png", "pdf"],
+            key=f"comprobante_{key_suffix}",
+        )
+        if st.button("Subir comprobante", key=f"subir_comprobante_{key_suffix}"):
+            if not comprobante:
+                st.error("Elegí un archivo primero.")
+            elif not images.esta_configurado():
+                st.error("La subida de archivos no está disponible ahora. Escribinos a "
+                          "cambiodefirma.contacto@gmail.com con el N.º de publicación "
+                          f"{pub_id} y el comprobante.")
+            else:
+                try:
+                    url = images.subir_comprobante(pub_id, comprobante.getvalue(), comprobante.name)
+                    agregar_comprobante(pub_id, usuario_id, url)
+                    notifications.notificar_comprobante_subido(pub_id, titulo, auth.usuario_actual()["email"])
+                    st.success("Comprobante recibido. Lo vamos a revisar y activar tu publicación a la brevedad.")
+                except Exception as e:
+                    print(f"[app] Falló la subida de comprobante para pub {pub_id}: {e!r}")
+                    st.error("No pudimos subir el archivo. Probá de nuevo, o escribinos a "
+                              f"cambiodefirma.contacto@gmail.com con el N.º de publicación {pub_id}.")
 
 
 def money(v):
@@ -154,6 +200,9 @@ if usuario:
                        on_click=ir_a, args=("favoritos",))
     st.sidebar.button("Mis alertas", use_container_width=True,
                        on_click=ir_a, args=("alertas",))
+    if es_admin(usuario):
+        st.sidebar.button("🛠️ Comprobantes pendientes", use_container_width=True,
+                           on_click=ir_a, args=("comprobantes",))
 
 st.sidebar.divider()
 st.sidebar.markdown("**Cómo funciona**")
@@ -457,11 +506,10 @@ if st.session_state.vista == "publicar" and pub_pendiente:
                         st.rerun()
                     else:
                         st.warning(
-                            "Todavía no encontramos el pago acreditado. Puede tardar unos minutos — probá de "
-                            "nuevo, o si ya pagaste y no se refleja, mandanos el comprobante a "
-                            "**cambiodefirma.contacto@gmail.com** con el N.º de publicación "
-                            f"**{pub_p['id']}** y lo activamos manualmente en menos de 48hs."
+                            "Todavía no encontramos el pago acreditado. Puede tardar unos minutos — probá "
+                            "de nuevo en un rato, o adjuntá el comprobante abajo."
                         )
+            bloque_subir_comprobante(pub_p["id"], auth.usuario_actual()["id"], pub_p["titulo"], "pendiente")
             st.divider()
             if st.button("Publicar otro negocio"):
                 st.session_state.pub_pendiente_pago = None
@@ -643,10 +691,10 @@ elif st.session_state.vista == "mis_publicaciones":
                                 st.rerun()
                             else:
                                 st.warning(
-                                    "Todavía no encontramos el pago acreditado. Si ya pagaste y no se refleja, "
-                                    "mandanos el comprobante a **cambiodefirma.contacto@gmail.com** con el N.º "
-                                    f"de publicación **{pub['id']}** y lo activamos manualmente en menos de 48hs."
+                                    "Todavía no encontramos el pago acreditado. Probá de nuevo en un rato, "
+                                    "o adjuntá el comprobante abajo."
                                 )
+                    bloque_subir_comprobante(pub["id"], usuario["id"], pub["titulo"], f"mispub_{pub['id']}")
                 else:
                     cb1, cb2, cb3 = st.columns(3)
                     with cb1:
@@ -895,6 +943,50 @@ elif st.session_state.vista == "alertas":
                 if st.button("Eliminar alerta", key=f"del_alerta_{alerta['id']}"):
                     eliminar_alerta(alerta["id"], usuario["id"])
                     st.rerun()
+
+# ---------- Vista: comprobantes pendientes (solo admin) ----------
+elif st.session_state.vista == "comprobantes":
+    auth.requerir_login()
+    usuario = auth.usuario_actual()
+    if not es_admin(usuario):
+        st.error("No tenés acceso a esta sección.")
+    else:
+        style.kicker("Panel de administración")
+        st.title("Comprobantes de pago pendientes")
+
+        pendientes = listar_comprobantes_pendientes()
+        if not pendientes:
+            st.info("No hay comprobantes pendientes de revisar.")
+        else:
+            for comp in pendientes:
+                with st.container(border=True):
+                    st.markdown(
+                        f"**{cap(comp['titulo'])}** (N.º {comp['publicacion_id']}) · "
+                        f"Nivel {comp['tier']} · Estado actual: {comp['estado_publicacion']} · "
+                        f"Subido por {comp['nombre']} ({comp['email']}) el {comp['fecha_creacion']}"
+                    )
+                    if comp["url"].lower().endswith(".pdf"):
+                        st.link_button("Ver comprobante (PDF)", comp["url"])
+                    else:
+                        st.image(comp["url"], width=300)
+                    cc1, cc2, cc3 = st.columns(3)
+                    with cc1:
+                        if st.button("✅ Activar publicación", key=f"activar_comp_{comp['id']}",
+                                     type="primary", use_container_width=True):
+                            activar_publicacion(comp["publicacion_id"])
+                            marcar_comprobante_revisado(comp["id"])
+                            st.toast("Publicación activada.", icon="✅")
+                            st.rerun()
+                    with cc2:
+                        st.button("Ver publicación", key=f"ver_comp_{comp['id']}",
+                                  on_click=ir_a, args=("detalle", comp["publicacion_id"]),
+                                  use_container_width=True)
+                    with cc3:
+                        if st.button("Descartar (no activar)", key=f"descartar_comp_{comp['id']}",
+                                     use_container_width=True):
+                            marcar_comprobante_revisado(comp["id"])
+                            st.toast("Marcado como revisado, sin activar.", icon="ℹ️")
+                            st.rerun()
 
 # ---------- Vista: acceso ----------
 elif st.session_state.vista == "acceso":

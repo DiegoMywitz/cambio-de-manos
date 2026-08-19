@@ -158,3 +158,14 @@ def notificar_promo_vencida(email: str, nombre: str, titulo: str, pub_id: int) -
         "Si vendiste el negocio o ya no querés seguir publicándolo, no hace falta que hagas nada."
     )
     return enviar_email(email, asunto, cuerpo)
+
+
+def notificar_comprobante_subido(pub_id: int, titulo: str, email_usuario: str) -> bool:
+    asunto = f"Cambio de Manos: comprobante de pago subido — publicación #{pub_id}"
+    link_admin = f"{_config('CDM_APP_BASE_URL', '').rstrip('/')}/?p=comprobantes"
+    cuerpo = (
+        f"{email_usuario} subió un comprobante de pago para la publicación #{pub_id} "
+        f"({titulo}), que todavía no se detectó como pagada automáticamente.\n\n"
+        f"Revisalo y activala manualmente si corresponde en: {link_admin}"
+    )
+    return enviar_email(ADMIN_EMAIL, asunto, cuerpo)

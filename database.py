@@ -166,6 +166,15 @@ def init_db():
             UNIQUE (usuario_id, publicacion_id)
         );
 
+        CREATE TABLE IF NOT EXISTS comprobantes_pago (
+            id SERIAL PRIMARY KEY,
+            publicacion_id INTEGER NOT NULL REFERENCES publicaciones(id),
+            usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
+            url TEXT NOT NULL,
+            revisado BOOLEAN DEFAULT FALSE,
+            fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
         CREATE TABLE IF NOT EXISTS alertas_busqueda (
             id SERIAL PRIMARY KEY,
             usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
@@ -473,6 +482,49 @@ def eliminar_publicacion(pub_id: int, usuario_id: int):
     cur.close()
     release_connection(conn)
     return True
+
+
+def agregar_comprobante(pub_id: int, usuario_id: int, url: str) -> int:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO comprobantes_pago (publicacion_id, usuario_id, url) VALUES (%s, %s, %s) RETURNING id",
+        (pub_id, usuario_id, url),
+    )
+    new_id = cur.fetchone()["id"]
+    conn.commit()
+    cur.close()
+    release_connection(conn)
+    return new_id
+
+
+def listar_comprobantes_pendientes():
+    """Comprobantes sin revisar, con datos de la publicación y del usuario, para el panel de admin."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT c.*, p.titulo, p.tier, p.estado AS estado_publicacion, u.email, u.nombre
+        FROM comprobantes_pago c
+        JOIN publicaciones p ON p.id = c.publicacion_id
+        JOIN usuarios u ON u.id = c.usuario_id
+        WHERE c.revisado = FALSE
+        ORDER BY c.fecha_creacion
+        """
+    )
+    rows = cur.fetchall()
+    cur.close()
+    release_connection(conn)
+    return rows
+
+
+def marcar_comprobante_revisado(comprobante_id: int):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("UPDATE comprobantes_pago SET revisado = TRUE WHERE id = %s", (comprobante_id,))
+    conn.commit()
+    cur.close()
+    release_connection(conn)
 
 
 def cambiar_estado_publicacion(pub_id: int, estado: str):
