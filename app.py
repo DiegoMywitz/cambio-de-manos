@@ -17,6 +17,7 @@ from database import (
     crear_alerta, listar_alertas_de_usuario, eliminar_alerta,
     contar_publicaciones_promo_gratis, marcar_promo_gratis,
     agregar_comprobante, listar_comprobantes_pendientes, marcar_comprobante_revisado,
+    contar_comprobantes_pendientes,
 )
 import style
 import auth
@@ -201,7 +202,9 @@ if usuario:
     st.sidebar.button("Mis alertas", use_container_width=True,
                        on_click=ir_a, args=("alertas",))
     if es_admin(usuario):
-        st.sidebar.button("🛠️ Comprobantes pendientes", use_container_width=True,
+        _pend = contar_comprobantes_pendientes()
+        etiqueta_comp = f"🛠️ Comprobantes pendientes ({_pend})" if _pend else "🛠️ Comprobantes pendientes"
+        st.sidebar.button(etiqueta_comp, use_container_width=True,
                            on_click=ir_a, args=("comprobantes",))
 
 st.sidebar.divider()

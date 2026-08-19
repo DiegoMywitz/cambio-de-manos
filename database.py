@@ -498,6 +498,16 @@ def agregar_comprobante(pub_id: int, usuario_id: int, url: str) -> int:
     return new_id
 
 
+def contar_comprobantes_pendientes() -> int:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) AS c FROM comprobantes_pago WHERE revisado = FALSE")
+    total = cur.fetchone()["c"]
+    cur.close()
+    release_connection(conn)
+    return total
+
+
 def listar_comprobantes_pendientes():
     """Comprobantes sin revisar, con datos de la publicación y del usuario, para el panel de admin."""
     conn = get_connection()
