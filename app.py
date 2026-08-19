@@ -484,7 +484,7 @@ if st.session_state.vista == "publicar" and not pub_pendiente:
                 st.session_state.pop(k, None)
             st.rerun()
 
-if st.session_state.vista == "publicar" and pub_pendiente:
+elif st.session_state.vista == "publicar" and pub_pendiente:
         pub_p = obtener_publicacion(pub_pendiente)
         if pub_p and pub_p["estado"] == "pendiente_pago":
             style.kicker("Alta de publicación")
