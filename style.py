@@ -13,6 +13,7 @@ GOLD = "#e0a30e"
 ICON_BLUE = "#5b84b1"
 ACCENT_BLUE = "#2d6cdf"
 GOLD_LIGHT = "#fdf1d6"
+CORAL = "#e2725b"
 
 ASSETS_DIR = Path(__file__).parent / "assets"
 
@@ -261,7 +262,7 @@ def inject():
             right: 2.5rem;
             bottom: 1.4rem;
             flex: none;
-            opacity: 0.4;
+            opacity: 0.75;
         }}
         .cdm-logo-decor {{
             flex: 1;
@@ -277,19 +278,19 @@ def inject():
             display: block;
             width: 12px;
             border-radius: 3px 3px 0 0;
-            background: linear-gradient(180deg, {GOLD} 0%, {ICON_BLUE} 100%);
-            opacity: 0.55;
+            background: linear-gradient(180deg, {GOLD} 0%, {ACCENT_BLUE} 100%);
+            opacity: 0.9;
             animation: cdmLogoGrow 2.4s ease-in-out infinite;
             transform-origin: bottom;
         }}
-        .cdm-logo-decor span:nth-child(1) {{ height: 22px; animation-delay: 0s; }}
-        .cdm-logo-decor span:nth-child(2) {{ height: 38px; animation-delay: 0.2s; }}
-        .cdm-logo-decor span:nth-child(3) {{ height: 55px; animation-delay: 0.4s; background: linear-gradient(180deg, {GOLD} 0%, {NAVY} 100%); }}
-        .cdm-logo-decor span:nth-child(4) {{ height: 32px; animation-delay: 0.6s; }}
-        .cdm-logo-decor span:nth-child(5) {{ height: 46px; animation-delay: 0.8s; }}
+        .cdm-logo-decor span:nth-child(1) {{ height: 22px; animation-delay: 0s; background: linear-gradient(180deg, {ACCENT_BLUE} 0%, {GOLD} 100%); }}
+        .cdm-logo-decor span:nth-child(2) {{ height: 38px; animation-delay: 0.2s; background: linear-gradient(180deg, {GOLD} 0%, {CORAL} 100%); }}
+        .cdm-logo-decor span:nth-child(3) {{ height: 55px; animation-delay: 0.4s; background: linear-gradient(180deg, {CORAL} 0%, {ACCENT_BLUE} 100%); }}
+        .cdm-logo-decor span:nth-child(4) {{ height: 32px; animation-delay: 0.6s; background: linear-gradient(180deg, {ACCENT_BLUE} 0%, {GOLD} 100%); }}
+        .cdm-logo-decor span:nth-child(5) {{ height: 46px; animation-delay: 0.8s; background: linear-gradient(180deg, {GOLD} 0%, {ACCENT_BLUE} 100%); }}
         @keyframes cdmLogoGrow {{
-            0%, 100% {{ transform: scaleY(0.55); opacity: 0.35; }}
-            50% {{ transform: scaleY(1); opacity: 0.85; }}
+            0%, 100% {{ transform: scaleY(0.55); opacity: 0.55; }}
+            50% {{ transform: scaleY(1); opacity: 1; }}
         }}
         @media (max-width: 640px) {{
             .cdm-logo-decor {{ display: none; }}
