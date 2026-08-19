@@ -275,44 +275,46 @@ if st.session_state.vista == "publicar" and not pub_pendiente:
                 st.video(video_unico)
             videos = [video_unico] if video_unico else []
 
-    promo_disponible = (not es_franquicia
-                         and contar_publicaciones_promo_gratis() < payments.CUPO_PROMO_GRATIS)
+    promo_basico_disponible = (not es_franquicia
+                                and contar_publicaciones_promo_gratis() < payments.CUPO_PROMO_GRATIS)
 
     tier = "basico"
+    promo_disponible = False
     if es_franquicia:
         st.info(
             "El precio de las publicaciones de franquicia se coordina directamente con vos "
             "— no se cobra automáticamente acá. Nos vamos a contactar por email para definir "
             "el valor y la modalidad."
         )
-    elif promo_disponible:
-        st.success(
-            f"🎉 ¡Publicación GRATIS por tus primeros {payments.DIAS_PROMO_GRATIS} días! "
-            f"Es parte del cupo de lanzamiento para los primeros {payments.CUPO_PROMO_GRATIS} "
-            "negocios publicados en Cambio de Manos."
-        )
-        tier_label = st.radio(
-            "Nivel de publicación (sin costo durante la promo)",
-            ["Básico", "Destacado — aparece primero en la búsqueda"],
-            key="pub_tier_label",
-        )
-        tier = "destacado" if tier_label.startswith("Destacado") else "basico"
-        st.caption(
-            f"Se publica gratis por {payments.DIAS_PROMO_GRATIS} días. Después de ese plazo se "
-            "pausa hasta que la pagues para mantenerla activa."
-        )
-    elif payments.esta_configurado():
-        precios_vigentes = payments.precios_por_tier()
-        tier_label = st.radio(
-            "Nivel de publicación",
-            [
-                f"Básico — ${precios_vigentes['basico']:,.0f} ARS".replace(",", "."),
-                f"Destacado — ${precios_vigentes['destacado']:,.0f} ARS (aparece primero en la búsqueda)".replace(",", "."),
-            ],
-            key="pub_tier_label",
-        )
-        tier = "destacado" if tier_label.startswith("Destacado") else "basico"
-        st.caption("La publicación se activa una vez confirmado el pago.")
+    else:
+        if promo_basico_disponible:
+            st.success(
+                f"🎉 El nivel Básico es GRATIS por tus primeros {payments.DIAS_PROMO_GRATIS} días "
+                f"— cupo de lanzamiento para los primeros {payments.CUPO_PROMO_GRATIS} negocios "
+                "publicados en Cambio de Manos. El nivel Destacado sigue siendo pago."
+            )
+        if payments.esta_configurado():
+            precios_vigentes = payments.precios_por_tier()
+            etiqueta_basico = (f"Básico — GRATIS por {payments.DIAS_PROMO_GRATIS} días (cupo de lanzamiento)"
+                                if promo_basico_disponible
+                                else f"Básico — ${precios_vigentes['basico']:,.0f} ARS".replace(",", "."))
+            tier_label = st.radio(
+                "Nivel de publicación",
+                [
+                    etiqueta_basico,
+                    f"Destacado — ${precios_vigentes['destacado']:,.0f} ARS (aparece primero en la búsqueda)".replace(",", "."),
+                ],
+                key="pub_tier_label",
+            )
+            tier = "destacado" if tier_label.startswith("Destacado") else "basico"
+            promo_disponible = tier == "basico" and promo_basico_disponible
+            if promo_disponible:
+                st.caption(
+                    f"Se publica gratis por {payments.DIAS_PROMO_GRATIS} días. Después de ese plazo se "
+                    "pausa hasta que la pagues para mantenerla activa."
+                )
+            else:
+                st.caption("La publicación se activa una vez confirmado el pago.")
 
     acepto_pub = st.checkbox(
         "Declaro que los datos cargados son reales y acepto los Términos y Condiciones y la Política de Privacidad",
