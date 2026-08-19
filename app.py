@@ -90,6 +90,7 @@ if st.session_state.vista != "detalle":
     st.set_page_config(page_title=TITULOS_VISTA.get(st.session_state.vista, "Cambio de Manos"))
 if "usuario" not in st.session_state:
     st.session_state.usuario = None
+    auth.restaurar_sesion()
 if "pub_pendiente_pago" not in st.session_state:
     st.session_state.pub_pendiente_pago = None
 

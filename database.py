@@ -93,6 +93,14 @@ def init_db():
 
         ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS email_verificado BOOLEAN DEFAULT FALSE;
 
+        CREATE TABLE IF NOT EXISTS sesiones (
+            id SERIAL PRIMARY KEY,
+            usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
+            token TEXT NOT NULL UNIQUE,
+            fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            fecha_expiracion TIMESTAMP NOT NULL
+        );
+
         CREATE TABLE IF NOT EXISTS verificaciones_email (
             id SERIAL PRIMARY KEY,
             usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
@@ -289,6 +297,50 @@ def verificar_email_con_token(token: str) -> bool:
     cur.close()
     release_connection(conn)
     return True
+
+
+def crear_sesion(usuario_id: int, dias_validez: int = 30) -> str:
+    """Token de sesión persistente (login que sobrevive a un F5), guardado en el
+    navegador vía localStorage. No es la contraseña, así que si se filtra solo
+    permite entrar a esa cuenta, no cambiarla ni verla en texto plano."""
+    token = secrets.token_urlsafe(32)
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO sesiones (usuario_id, token, fecha_expiracion) "
+        "VALUES (%s, %s, NOW() + %s * INTERVAL '1 day')",
+        (usuario_id, token, dias_validez),
+    )
+    conn.commit()
+    cur.close()
+    release_connection(conn)
+    return token
+
+
+def obtener_usuario_por_sesion(token: str):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT u.* FROM sesiones s
+        JOIN usuarios u ON u.id = s.usuario_id
+        WHERE s.token = %s AND s.fecha_expiracion > NOW()
+        """,
+        (token,),
+    )
+    row = cur.fetchone()
+    cur.close()
+    release_connection(conn)
+    return row
+
+
+def eliminar_sesion(token: str):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM sesiones WHERE token = %s", (token,))
+    conn.commit()
+    cur.close()
+    release_connection(conn)
 
 
 def crear_token_reset(usuario_id: int, horas_validez: int = 24) -> str:

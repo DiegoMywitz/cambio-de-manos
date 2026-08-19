@@ -1,12 +1,14 @@
 import re
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 from database import (
     crear_usuario, obtener_usuario_por_email, verificar_password,
     crear_token_reset, obtener_reset_valido, actualizar_password_con_token,
     crear_token_verificacion, verificar_email_con_token,
     diagnosticar_token_reset,
+    crear_sesion, obtener_usuario_por_sesion, eliminar_sesion,
 )
 import notifications
 import legal
@@ -20,6 +22,67 @@ def usuario_actual():
     return st.session_state.get("usuario")
 
 
+def _guardar_sesion_local(token: str):
+    """Guarda el token de sesión en localStorage del navegador para que el login
+    sobreviva a un F5 (st.session_state solo se pierde en cada reconexión)."""
+    components.html(
+        f"<script>window.parent.localStorage.setItem('cdm_st', '{token}');</script>",
+        height=0, width=0,
+    )
+
+
+def _borrar_sesion_local():
+    components.html(
+        "<script>window.parent.localStorage.removeItem('cdm_st');</script>",
+        height=0, width=0,
+    )
+
+
+def _iniciar_sesion(usuario: dict):
+    """Marca a un usuario como logueado y le da persistencia entre recargas."""
+    st.session_state.usuario = usuario
+    token = crear_sesion(usuario["id"])
+    st.session_state._session_token = token
+    _guardar_sesion_local(token)
+
+
+def restaurar_sesion():
+    """Si el usuario no está logueado en esta sesión de Streamlit (por ejemplo,
+    porque recargó la página), intenta restaurar el login usando el token
+    guardado en localStorage la vez anterior."""
+    if usuario_actual():
+        return
+
+    token_qp = st.query_params.get("st")
+    if token_qp:
+        usuario = obtener_usuario_por_sesion(token_qp)
+        otros_params = {k: v for k, v in st.query_params.items() if k != "st"}
+        st.query_params.clear()
+        for k, v in otros_params.items():
+            st.query_params[k] = v
+        if usuario:
+            st.session_state.usuario = dict(usuario)
+            st.session_state._session_token = token_qp
+        else:
+            _borrar_sesion_local()
+        st.rerun()
+        return
+
+    components.html(
+        """
+        <script>
+        var t = window.parent.localStorage.getItem('cdm_st');
+        if (t) {
+            var url = new URL(window.parent.location.href);
+            url.searchParams.set('st', t);
+            window.parent.location.replace(url.toString());
+        }
+        </script>
+        """,
+        height=0, width=0,
+    )
+
+
 def reenviar_verificacion(usuario) -> bool:
     """Genera un nuevo link de verificación y lo reenvía. Devuelve True si se pudo enviar."""
     if not notifications.esta_configurado():
@@ -30,7 +93,12 @@ def reenviar_verificacion(usuario) -> bool:
 
 
 def cerrar_sesion():
+    token = st.session_state.get("_session_token")
+    if token:
+        eliminar_sesion(token)
     st.session_state.usuario = None
+    st.session_state._session_token = None
+    _borrar_sesion_local()
 
 
 def _form_login():
@@ -44,7 +112,7 @@ def _form_login():
             if usuario is None or not verificar_password(usuario, password):
                 st.error("Email o contraseña incorrectos.")
             else:
-                st.session_state.usuario = dict(usuario)
+                _iniciar_sesion(dict(usuario))
                 st.rerun()
 
 
@@ -154,7 +222,7 @@ def _form_registro():
                 st.error("Ya existe una cuenta registrada con ese email.")
             else:
                 usuario_id = crear_usuario(nombre, email, password, telefono)
-                st.session_state.usuario = dict(obtener_usuario_por_email(email))
+                _iniciar_sesion(dict(obtener_usuario_por_email(email)))
                 if notifications.esta_configurado():
                     token = crear_token_verificacion(usuario_id)
                     link = f"{APP_URL}?verify_token={token}"
