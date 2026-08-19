@@ -216,31 +216,52 @@ def inject():
             margin-top: 0.15rem;
         }}
 
-        /* El logo de la portada (estático, arriba de la búsqueda): a la
-           izquierda como antes, un poco más grande, y con un adorno animado
-           a la derecha para no dejar ese espacio vacío. */
+        /* El logo de la portada (estático, arriba de la búsqueda): centrado,
+           más grande, sobre una tarjeta con degradé suave — el adorno animado
+           queda como fondo detrás en vez de competir por el centro. */
         .cdm-logo-panel.cdm-logo-panel--static {{
             cursor: default;
-            padding: 0.2rem 0 1rem 0;
-            background-color: transparent;
-            background-image: none;
-            justify-content: flex-start;
-            gap: 1.1rem;
+            padding: 1.8rem 2rem;
+            background-color: {BG};
+            background-image:
+                radial-gradient(circle at 12% 20%, rgba(15,38,71,0.05) 0%, transparent 45%),
+                radial-gradient(circle at 88% 80%, rgba(224,163,14,0.08) 0%, transparent 45%);
+            border-radius: 18px;
+            box-shadow: 0 1px 0 rgba(255,255,255,0.7) inset, 0 10px 28px rgba(15,38,71,0.07);
+            justify-content: center;
+            gap: 1.3rem;
+            margin-bottom: 0.5rem;
+            position: relative;
+            overflow: hidden;
         }}
         .cdm-logo-panel--static img {{
-            width: 82px;
-            height: 82px;
+            width: 104px;
+            height: 104px;
+            position: relative;
+            z-index: 1;
         }}
         .cdm-logo-panel--static .cdm-logo-word {{
-            font-size: 1.85rem;
+            font-size: 2.4rem;
+            position: relative;
+            z-index: 1;
         }}
         .cdm-logo-panel--static .cdm-logo-tagline {{
-            font-size: 0.74rem;
-            margin-top: 0.2rem;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            margin-top: 0.25rem;
+            position: relative;
+            z-index: 1;
         }}
 
         .block-container {{
             padding-top: 1.5rem !important;
+        }}
+        .cdm-logo-panel--static .cdm-logo-decor {{
+            position: absolute;
+            right: 2.5rem;
+            bottom: 1.4rem;
+            flex: none;
+            opacity: 0.4;
         }}
         .cdm-logo-decor {{
             flex: 1;
