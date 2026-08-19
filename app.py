@@ -8,7 +8,7 @@ from database import (
     RUBROS, PROVINCIAS, CIUDADES_SUGERIDAS, init_db, crear_publicacion, listar_publicaciones,
     obtener_publicacion, crear_consulta, listar_consultas, marcar_consulta_respondida,
     contar_consultas_por_publicacion,
-    listar_publicaciones_de_usuario, activar_publicacion, cambiar_estado_publicacion,
+    listar_publicaciones_de_usuario, activar_publicacion, cambiar_estado_publicacion, eliminar_publicacion,
     listar_vendidos_recientes, reporte_precios_por_rubro, listar_top_precios,
     publicacion_duplicada_reciente,
     agregar_imagen, listar_imagenes, imagenes_portada, agregar_video, listar_videos,
@@ -669,6 +669,26 @@ elif st.session_state.vista == "mis_publicaciones":
                             if st.button("Reactivar publicación", key=f"revender_{pub['id']}", use_container_width=True):
                                 cambiar_estado_publicacion(pub["id"], "activa")
                                 st.rerun()
+
+                    if st.session_state.get("confirmar_borrar") == pub["id"]:
+                        st.warning(f"¿Seguro que querés borrar **\"{cap(pub['titulo'])}\"**? "
+                                   "Se pierden sus fotos, videos y consultas. No se puede deshacer.")
+                        cd1, cd2 = st.columns(2)
+                        with cd1:
+                            if st.button("Sí, borrar definitivamente", key=f"borrar_confirmar_{pub['id']}",
+                                         type="primary", use_container_width=True):
+                                eliminar_publicacion(pub["id"], usuario["id"])
+                                st.session_state.confirmar_borrar = None
+                                st.toast("Publicación borrada.", icon="🗑️")
+                                st.rerun()
+                        with cd2:
+                            if st.button("Cancelar", key=f"borrar_cancelar_{pub['id']}", use_container_width=True):
+                                st.session_state.confirmar_borrar = None
+                                st.rerun()
+                    else:
+                        if st.button("🗑️ Eliminar publicación", key=f"borrar_{pub['id']}"):
+                            st.session_state.confirmar_borrar = pub["id"]
+                            st.rerun()
 
 # ---------- Vista: mis favoritos ----------
 elif st.session_state.vista == "favoritos":

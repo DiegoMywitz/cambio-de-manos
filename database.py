@@ -452,6 +452,29 @@ def activar_publicacion(pub_id: int):
     release_connection(conn)
 
 
+def eliminar_publicacion(pub_id: int, usuario_id: int):
+    """Borra la publicación y todo lo que depende de ella (fotos, videos,
+    consultas, favoritos de otros usuarios). Irreversible. Solo borra si
+    pertenece al usuario_id dado, para que un dueño no pueda borrar la de
+    otro."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT id FROM publicaciones WHERE id = %s AND usuario_id = %s", (pub_id, usuario_id))
+    if cur.fetchone() is None:
+        cur.close()
+        release_connection(conn)
+        return False
+    cur.execute("DELETE FROM imagenes_publicacion WHERE publicacion_id = %s", (pub_id,))
+    cur.execute("DELETE FROM videos_publicacion WHERE publicacion_id = %s", (pub_id,))
+    cur.execute("DELETE FROM consultas WHERE publicacion_id = %s", (pub_id,))
+    cur.execute("DELETE FROM favoritos WHERE publicacion_id = %s", (pub_id,))
+    cur.execute("DELETE FROM publicaciones WHERE id = %s", (pub_id,))
+    conn.commit()
+    cur.close()
+    release_connection(conn)
+    return True
+
+
 def cambiar_estado_publicacion(pub_id: int, estado: str):
     """estado válido: activa, pausada, vendida"""
     conn = get_connection()
