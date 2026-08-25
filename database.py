@@ -536,6 +536,27 @@ def eliminar_publicacion(pub_id: int, usuario_id: int):
     return True
 
 
+def eliminar_todas_las_publicaciones() -> int:
+    """Borra TODAS las publicaciones y lo que dependa de ellas (fotos, videos,
+    consultas, favoritos, comprobantes de pago). Irreversible, sin excepciones
+    de dueño — pensado solo para el botón de admin que vacía los datos de
+    ejemplo antes del lanzamiento real. Devuelve cuántas se borraron."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) AS c FROM publicaciones")
+    total = cur.fetchone()["c"]
+    cur.execute("DELETE FROM comprobantes_pago")
+    cur.execute("DELETE FROM favoritos")
+    cur.execute("DELETE FROM consultas")
+    cur.execute("DELETE FROM imagenes_publicacion")
+    cur.execute("DELETE FROM videos_publicacion")
+    cur.execute("DELETE FROM publicaciones")
+    conn.commit()
+    cur.close()
+    release_connection(conn)
+    return total
+
+
 def agregar_comprobante(pub_id: int, usuario_id: int, url: str) -> int:
     conn = get_connection()
     cur = conn.cursor()

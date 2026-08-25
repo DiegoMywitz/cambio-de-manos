@@ -17,7 +17,7 @@ from database import (
     crear_alerta, listar_alertas_de_usuario, eliminar_alerta,
     contar_publicaciones_promo_gratis, marcar_promo_gratis,
     agregar_comprobante, listar_comprobantes_pendientes, marcar_comprobante_revisado,
-    contar_comprobantes_pendientes,
+    contar_comprobantes_pendientes, eliminar_todas_las_publicaciones,
 )
 import style
 import auth
@@ -991,6 +991,22 @@ elif st.session_state.vista == "comprobantes":
                             marcar_comprobante_revisado(comp["id"])
                             st.toast("Marcado como revisado, sin activar.", icon="ℹ️")
                             st.rerun()
+
+        st.divider()
+        with st.expander("⚠️ Zona de peligro"):
+            st.warning(
+                "Esto borra TODAS las publicaciones del sitio (incluidas las de ejemplo y las "
+                "reales que haya en este momento), con sus fotos, videos, consultas y favoritos. "
+                "No se puede deshacer."
+            )
+            confirmacion = st.text_input(
+                "Para confirmar, escribí BORRAR TODO en mayúsculas", key="confirmar_borrado_masivo"
+            )
+            if st.button("Borrar todas las publicaciones", type="primary",
+                          disabled=confirmacion != "BORRAR TODO"):
+                cantidad = eliminar_todas_las_publicaciones()
+                st.success(f"Listo, se borraron {cantidad} publicaciones.")
+                st.toast("Sitio vaciado.", icon="🗑️")
 
 # ---------- Vista: acceso ----------
 elif st.session_state.vista == "acceso":
