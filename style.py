@@ -62,12 +62,6 @@ def inject():
         [data-testid="stSidebar"] .cdm-logo-word {{
             color: #ffffff !important;
         }}
-        [data-testid="stSidebar"] .cdm-logo-panel img {{
-            background-color: {BG};
-            border-radius: 4px;
-            padding: 6px;
-            box-sizing: border-box;
-        }}
         [data-testid="stSidebar"] .cdm-logo-tagline {{
             color: {ICON_BLUE} !important;
         }}
@@ -196,8 +190,8 @@ def inject():
             overflow: hidden;
         }}
         .cdm-logo-panel img {{
-            width: 44px;
             height: 44px;
+            width: auto;
             flex-shrink: 0;
         }}
         .cdm-logo-word {{
@@ -236,8 +230,8 @@ def inject():
             overflow: hidden;
         }}
         .cdm-logo-panel--static img {{
-            width: 104px;
             height: 104px;
+            width: auto;
             position: relative;
             z-index: 1;
         }}
@@ -533,22 +527,21 @@ def como_funciona():
     st.markdown(f'<div class="cdm-como-funciona">{pasos_html}</div>', unsafe_allow_html=True)
 
 
-_LOGO_B64 = None
+_LOGO_B64_CACHE = {}
 
 
-def _logo_base64() -> str:
-    global _LOGO_B64
-    if _LOGO_B64 is None:
+def _logo_base64(nombre_archivo: str) -> str:
+    if nombre_archivo not in _LOGO_B64_CACHE:
         import base64
-        svg_bytes = (ASSETS_DIR / "logo.svg").read_bytes()
-        _LOGO_B64 = base64.b64encode(svg_bytes).decode("ascii")
-    return _LOGO_B64
+        contenido = (ASSETS_DIR / nombre_archivo).read_bytes()
+        _LOGO_B64_CACHE[nombre_archivo] = base64.b64encode(contenido).decode("ascii")
+    return _LOGO_B64_CACHE[nombre_archivo]
 
 
 def main_logo():
     st.markdown(
         f'<div class="cdm-logo-panel cdm-logo-panel--static">'
-        f'<img src="data:image/svg+xml;base64,{_logo_base64()}" alt="Cambio de Manos">'
+        f'<img src="data:image/png;base64,{_logo_base64("logo_icon_navy.png")}" alt="Cambio de Manos">'
         f'<div><div class="cdm-logo-word">CAMBIO<br>DE MANOS</div><div class="cdm-logo-tagline">COMPRAVENTA DE EMPRESAS</div></div>'
         f'<div class="cdm-logo-decor"><span></span><span></span><span></span><span></span><span></span></div>'
         f'</div>',
@@ -559,7 +552,7 @@ def main_logo():
 def sidebar_logo(on_click=None, args=None):
     with st.sidebar.container(key="logo_click_wrap"):
         st.markdown(
-            f'<div class="cdm-logo-panel"><img src="data:image/svg+xml;base64,{_logo_base64()}" alt="Cambio de Manos"><div><div class="cdm-logo-word">CAMBIO<br>DE MANOS</div><div class="cdm-logo-tagline">COMPRAVENTA DE EMPRESAS</div></div></div>',
+            f'<div class="cdm-logo-panel"><img src="data:image/png;base64,{_logo_base64("logo_icon_cream.png")}" alt="Cambio de Manos"><div><div class="cdm-logo-word">CAMBIO<br>DE MANOS</div><div class="cdm-logo-tagline">COMPRAVENTA DE EMPRESAS</div></div></div>',
             unsafe_allow_html=True,
         )
         st.button("Ir al inicio", key="logo_home_btn", use_container_width=True,
