@@ -189,7 +189,7 @@ def inject():
             position: relative;
         }}
         .cdm-logo-panel img {{
-            height: 44px;
+            height: 58px;
             width: auto;
             flex-shrink: 0;
         }}
