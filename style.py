@@ -187,7 +187,6 @@ def inject():
             margin-bottom: 1rem;
             cursor: pointer;
             position: relative;
-            overflow: hidden;
         }}
         .cdm-logo-panel img {{
             height: 44px;
